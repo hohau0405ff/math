@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cổng Công Cụ Toán Học & Học Tập | Math Hub</title>
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📐</text></svg>">
+  
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <style>
+    /* ==========================================================
+       CSS VARIABLES & THEME SETUP
+       ========================================================== */
+    :root {
+      --font-main: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', Consolas, 'Courier New', monospace;
+      
+      /* Dark Theme (Default) */
+      --bg-body: #0b0f17;
+      --bg-surface: #121824;
+      --bg-card: #182234;
+      --bg-card-hover: #1f2b42;
+      --bg-input: #101622;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-card: rgba(255, 255, 255, 0.12);
+      --border-card-hover: rgba(99, 102, 241, 0.5);
+      
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-subtle: #64748b;
+      
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-light: rgba(99, 102, 241, 0.15);
+      
+      --color-edushare: #06b6d4;
+      --color-vinacal: #10b981;
+      --color-hinhhoc: #00cec9;
+      --color-geo2d: #8b5cf6;
+      --color-tailieu: #ef4444;
+
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
+      --shadow-md: 0 8px 24px -4px rgba(0, 0, 0, 0.35);
+      --shadow-lg: 0 16px 36px -6px rgba(0, 0, 0, 0.45);
+      --shadow-glow: 0 0 25px rgba(99, 102, 241, 0.2);
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+      
+      --transition-smooth: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    [data-theme="light"] {
+      --bg-body: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f1f5f9;
+      --bg-input: #f1f5f9;
+      --border-subtle: rgba(0, 0, 0, 0.06);
+      --border-card: rgba(0, 0, 0, 0.08);
+      --border-card-hover: rgba(99, 102, 241, 0.4);
+      
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --text-subtle: #94a3b8;
+      
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --primary-light: rgba(79, 70, 229, 0.1);
+
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 20px 30px -10px rgba(0, 0, 0, 0.12);
+      --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
+    }
+
+    /* ==========================================================
+       RESET & BASE STYLES
+       ========================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      line-height: 1.5;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      background-image: 
+        radial-gradient(circle at 15% 10%, rgba(99, 102, 241, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(6, 182, 212, 0.07) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    button {
+      font-family: inherit;
+      border: none;
+      outline: none;
+      background: none;
+      cursor: pointer;
+    }
+
+    /* ==========================================================
+       TOP NAVBAR
+       ========================================================== */
+    .navbar {
+      width: 100%;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+      background: rgba(18, 24, 36, 0.7);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    [data-theme="light"] .navbar {
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #6366f1, #3b82f6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    }
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #818cf8, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    [data-theme="light"] .brand-title {
+      background: linear-gradient(135deg, #4338ca, #0284c7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-sub {
+      font-size: 0.75rem;
+      color: var(--text-subtle);
+      font-weight: 500;
+      margin-top: -2px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .theme-toggle-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-card);
+      color: var(--text-muted);
+      transition: var(--transition-smooth);
+      font-size: 1.05rem;
+    }
+
+    .theme-toggle-btn:hover {
+      color: var(--text-main);
+      border-color: var(--border-card-hover);
+      transform: translateY(-1px);
+    }
+
+    /* ==========================================================
+       CONTAINER & HEADER SECTION
+       ========================================================== */
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+      width: 100%;
+      flex: 1;
+    }
+
+    .hero-section {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: var(--radius-full);
+      background: var(--primary-light);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: var(--primary);
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .hero-badge i {
+      font-size: 0.8rem;
+    }
+
+    .hero-title {
+      font-size: 2.4rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.75rem;
+      color: var(--text-main);
+    }
+
+    .hero-desc {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    /* Search & Filter Bar */
+    .toolbar-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .search-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 280px;
+      max-width: 480px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-subtle);
+      font-size: 0.95rem;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 14px 12px 42px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-md);
+      color: var(--text-main);
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: var(--transition-smooth);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .search-shortcut-hint {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 2px 7px;
+      background: var(--border-subtle);
+      border: 1px solid var(--border-card);
+      border-radius: 4px;
+      font-size: 0.75rem;
+      color: var(--text-subtle);
+      font-family: var(--font-mono);
+      pointer-events: none;
+    }
+
+    .stats-counter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .stats-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    /* Shortcuts Banner */
+    .shortcuts-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 10px 18px;
+      margin-bottom: 2.2rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+
+    .shortcuts-bar-title {
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .key-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .shortcut-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ==========================================================
+       TOOLS GRID & CARDS
+       ========================================================== */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .tool-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: var(--transition-smooth);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+
+    .tool-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: var(--card-accent, var(--primary));
+      opacity: 0.85;
+      transition: var(--transition-smooth);
+    }
+
+    .tool-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--card-accent, var(--border-card-hover));
+    }
+
+    .tool-card:hover::before {
+      height: 6px;
+    }
+
+    /* Card Header */
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-icon-wrap {
+      width: 58px;
+      height: 58px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      background: var(--card-icon-bg, rgba(99, 102, 241, 0.15));
+      color: var(--card-accent, var(--primary));
+      border: 1px solid var(--card-border, rgba(99, 102, 241, 0.25));
+      transition: var(--transition-smooth);
+    }
+
+    .tool-card:hover .card-icon-wrap {
+      transform: scale(1.06);
+    }
+
+    .card-quickkey {
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-card);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-subtle);
+    }
+
+    .card-badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 9px;
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 600;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .status-dot.online {
+      background-color: #10b981;
+      box-shadow: 0 0 8px #10b981;
+    }
+
+    .status-dot.checking {
+      background-color: #f59e0b;
+      box-shadow: 0 0 8px #f59e0b;
+      animation: pulse 1.5s infinite;
+    }
+
+    .status-dot.offline {
+      background-color: #ef4444;
+    }
+
+    .status-dot.static {
+      background-color: #6366f1;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Card Titles & Description */
+    .card-title-group {
+      margin-bottom: 0.75rem;
+    }
+
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-subtitle {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--card-accent, var(--primary));
+      margin-top: 2px;
+    }
+
+    .card-desc {
+      font-size: 0.92rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin-bottom: 1.25rem;
+      flex: 1;
+    }
+
+    /* Tags */
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-tag {
+      font-size: 0.75rem;
+      padding: 3px 8px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-surface);
+      color: var(--text-subtle);
+      border: 1px solid var(--border-subtle);
+      font-weight: 500;
+    }
+
+    /* Card Actions */
+    .card-actions {
+      display: flex;
+      margin-top: auto;
+    }
+
+    .btn-launch {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      background: var(--card-accent, var(--primary));
+      color: #ffffff;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      transition: var(--transition-smooth);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+    }
+
+    .btn-launch:hover {
+      filter: brightness(1.12);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Specific Tool Themes */
+    .card-edushare {
+      --card-accent: #06b6d4;
+      --card-icon-bg: rgba(6, 182, 212, 0.14);
+      --card-border: rgba(6, 182, 212, 0.28);
+    }
+
+    .card-vinacal {
+      --card-accent: #10b981;
+      --card-icon-bg: rgba(16, 185, 129, 0.14);
+      --card-border: rgba(16, 185, 129, 0.28);
+    }
+
+    .card-hinhhoc {
+      --card-accent: #00cec9;
+      --card-icon-bg: rgba(0, 206, 201, 0.14);
+      --card-border: rgba(0, 206, 201, 0.28);
+    }
+
+    .card-geo2d {
+      --card-accent: #8b5cf6;
+      --card-icon-bg: rgba(139, 92, 246, 0.14);
+      --card-border: rgba(139, 92, 246, 0.28);
+    }
+
+    .card-tailieu {
+      --card-accent: #ef4444;
+      --card-icon-bg: rgba(239, 68, 68, 0.14);
+      --card-border: rgba(239, 68, 68, 0.28);
+    }
+
+    /* ==========================================================
+       FOOTER
+       ========================================================== */
+    .footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 2rem 1.5rem;
+      background: var(--bg-surface);
+      margin-top: auto;
+    }
+
+    .footer-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .footer-meta {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-subtle);
+    }
+
+    /* ==========================================================
+       TOAST NOTIFICATION
+       ========================================================== */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      color: var(--text-main);
+      padding: 12px 20px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      font-size: 0.9rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.3s ease forwards;
+      pointer-events: auto;
+    }
+
+    .toast i {
+      color: #10b981;
+    }
+
+    /* ==========================================================
+       ANIMATIONS & RESPONSIVE
+       ========================================================== */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      .navbar {
+        padding: 0 1.25rem;
+      }
+      .container {
+        padding: 1.75rem 1rem 3rem;
+      }
+      .hero-title {
+        font-size: 1.85rem;
+      }
+      .tools-grid {
+        grid-template-columns: 1fr;
+      }
+      .shortcuts-bar {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== HEADER NAVBAR ==================== -->
+  <header class="navbar">
+    <div class="brand">
+      <div class="brand-icon">
+        <i class="fa-solid fa-shapes"></i>
+      </div>
+      <div class="brand-text">
+        <span class="brand-title">MATH HUB &amp; LEARNING</span>
+        <span class="brand-sub">Cổng Điều Hướng Công Cụ Học Tập &amp; Giảng Dạy</span>
+      </div>
+    </div>
+
+    <div class="nav-actions">
+      <button class="theme-toggle-btn" id="themeToggleBtn" title="Chuyển đổi Chế độ Sáng / Tối" aria-label="Toggle Theme">
+        <i class="fa-solid fa-moon" id="themeIcon"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- ==================== MAIN CONTENT ==================== -->
+  <main class="container">
+    
+    <!-- Hero Banner -->
+    <section class="hero-section">
+      <div class="hero-badge">
+        <i class="fa-solid fa-compass"></i>
+        <span>Hệ Sinh Thái Công Cụ Toán Học</span>
+      </div>
+      <h1 class="hero-title">Chọn công cụ để bắt đầu làm việc</h1>
+      <p class="hero-desc">
+        Hệ thống tích hợp nhanh các nền tảng chia sẻ tài liệu, giả lập máy tính khoa học, bảng phấn hình học động 2D/3D và tài liệu tóm tắt THPT.
+      </p>
+    </section>
+
+    <!-- Toolbar: Search & Info -->
+    <div class="toolbar-section">
+      <div class="search-wrapper">
+        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+        <input 
+          type="text" 
+          id="searchInput" 
+          class="search-input" 
+          placeholder="Tìm công cụ, từ khóa (vinacal, 2d, 3d, tailieu...)..." 
+          autocomplete="off"
+        >
+        <span class="search-shortcut-hint">/</span>
+      </div>
+
+      <div class="stats-counter">
+        <span>Tổng số:</span>
+        <span class="stats-badge" id="toolCountBadge">5 công cụ</span>
+      </div>
+    </div>
+
+    <!-- Quick Keyboard Shortcuts Bar -->
+    <div class="shortcuts-bar">
+      <span class="shortcuts-bar-title"><i class="fa-regular fa-keyboard"></i> Phím tắt nhanh:</span>
+      <span class="shortcut-item"><span class="key-badge">1</span> EduShare</span>
+      <span class="shortcut-item">•</span>
+      <span class="shortcut-item"><span class="key-badge">2</span> Vinacal</span>
+      <span class="shortcut-item">•</span>
+      <span class="shortcut-item"><span class="key-badge">3</span> Hình Học</span>
+      <span class="shortcut-item">•</span>
+      <span class="shortcut-item"><span class="key-badge">4</span> Hình Học 2D Ver2</span>
+      <span class="shortcut-item">•</span>
+      <span class="shortcut-item"><span class="key-badge">5</span> Tài Liệu</span>
+      <span class="shortcut-item">•</span>
+      <span class="shortcut-item"><span class="key-badge">/</span> Tìm kiếm</span>
+    </div>
+
+    <!-- Tools Grid -->
+    <div class="tools-grid" id="toolsGrid">
+
+      <!-- ==================== 1. EDUSHARE ==================== -->
+      <article class="tool-card card-edushare" data-key="1" data-tags="edushare chia se tai lieu cloud online vn-ai.cloud dien dan forum">
+        <div class="card-top">
+          <div class="card-icon-wrap">
+            <i class="fa-solid fa-share-nodes"></i>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="card-badge-status" id="edushareStatusBadge" title="Trạng thái dịch vụ EduShare Cloud">
+              <span class="status-dot online" id="edushareStatusDot"></span>
+              <span id="edushareStatusText">Cloud Online</span>
+            </span>
+            <span class="card-quickkey">Phím 1</span>
+          </div>
+        </div>
+
+        <div class="card-title-group">
+          <h2 class="card-title">
+            EduShare
+          </h2>
+          <div class="card-subtitle">Hệ Thống Trao Đổi &amp; Chia Sẻ Tài Liệu (Cloud)</div>
+        </div>
+
+        <p class="card-desc">
+          Nền tảng chia sẻ tài liệu học tập, diễn đàn thảo luận, trao đổi bài tập và quản lý học liệu trực tuyến trên nền tảng đám mây EduShare.
+        </p>
+
+        <div class="card-tags">
+          <span class="card-tag">Cloud Web</span>
+          <span class="card-tag">Online</span>
+          <span class="card-tag">Tài liệu</span>
+          <span class="card-tag">Thảo luận</span>
+        </div>
+
+        <div class="card-actions">
+          <a href="http://edushare.vn-ai.cloud" class="btn-launch" target="_blank" rel="noopener">
+            <span>Truy cập EduShare</span>
+            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+          </a>
+        </div>
+      </article>
+
+      <!-- ==================== 2. VINACAL ==================== -->
+      <article class="tool-card card-vinacal" data-key="2" data-tags="vinacal smt may tinh bo tui casio 680ex khoa hoc calculator">
+        <div class="card-top">
+          <div class="card-icon-wrap">
+            <i class="fa-solid fa-calculator"></i>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="card-badge-status">
+              <span class="status-dot static"></span>
+              <span>Offline / Sẵn sàng</span>
+            </span>
+            <span class="card-quickkey">Phím 2</span>
+          </div>
+        </div>
+
+        <div class="card-title-group">
+          <h2 class="card-title">
+            Vinacal 680EX
+          </h2>
+          <div class="card-subtitle">Giả Lập Máy Tính Khoa Học Cao Cấp</div>
+        </div>
+
+        <p class="card-desc">
+          Bộ giả lập máy tính cầm tay VINACAL 680EX PLUS III đầy đủ tính năng: giải hệ phương trình, ma trận, số phức, thống kê, bảng giá trị.
+        </p>
+
+        <div class="card-tags">
+          <span class="card-tag">Offline App</span>
+          <span class="card-tag">Vinacal 680EX</span>
+          <span class="card-tag">Giải PT / HPT</span>
+          <span class="card-tag">Ma trận &amp; Vectơ</span>
+        </div>
+
+        <div class="card-actions">
+          <a href="smt/index.html" class="btn-launch" target="_blank">
+            <span>Mở Vinacal 680EX</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+      </article>
+
+      <!-- ==================== 3. HÌNH HỌC (GEOCHALK) ==================== -->
+      <article class="tool-card card-hinhhoc" data-key="3" data-tags="hinh hoc hinhhoc geochalk online 2d 3d khong gian oxyz phang do thi cas bang ky thuat">
+        <div class="card-top">
+          <div class="card-icon-wrap">
+            <i class="fa-solid fa-shapes"></i>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="card-badge-status" title="Bảng kỹ thuật số GeoChalk">
+              <span class="status-dot static"></span>
+              <span>Sẵn sàng</span>
+            </span>
+            <span class="card-quickkey">Phím 3</span>
+          </div>
+        </div>
+
+        <div class="card-title-group">
+          <h2 class="card-title">
+            Hình Học (GeoChalk)
+          </h2>
+          <div class="card-subtitle">Không Gian 3D, Hình Học Phẳng, Đồ Thị &amp; Đại Số CAS</div>
+        </div>
+
+        <p class="card-desc">
+          Bảng kỹ thuật số GeoChalk toàn diện: tích hợp đầy đủ 4 chế độ Hình học không gian 3D, Hình học phẳng 2D, Khảo sát đồ thị và Máy tính đại số CAS, lưu dự án online qua SQLite.
+        </p>
+
+        <div class="card-tags">
+          <span class="card-tag">GeoChalk</span>
+          <span class="card-tag">Hình học 3D</span>
+          <span class="card-tag">Hình học phẳng</span>
+          <span class="card-tag">Đồ thị hàm số</span>
+          <span class="card-tag">Đại số CAS</span>
+        </div>
+
+        <div class="card-actions">
+          <a href="geochalk/geochalk.html" class="btn-launch" target="_blank">
+            <span>Mở Bảng Vẽ GeoChalk</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+      </article>
+
+      <!-- ==================== 4. HÌNH HỌC 2D VER2 ==================== -->
+      <article class="tool-card card-geo2d" data-key="4" data-tags="hinh hoc 2d ver2 geochalk2d hh2d hinh hoc phang bang phan thanh truot dong thuoc do compa quy tich offline">
+        <div class="card-top">
+          <div class="card-icon-wrap">
+            <i class="fa-solid fa-draw-polygon"></i>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="card-badge-status">
+              <span class="status-dot static"></span>
+              <span>Offline / Sẵn sàng</span>
+            </span>
+            <span class="card-quickkey">Phím 4</span>
+          </div>
+        </div>
+
+        <div class="card-title-group">
+          <h2 class="card-title">
+            Hình Học 2D Ver2
+          </h2>
+          <div class="card-subtitle">Bảng Hình Học Phẳng &amp; Thanh Trượt Động (Bản Gốc 2D)</div>
+        </div>
+
+        <p class="card-desc">
+          Bảng vẽ hình học phẳng kỹ thuật số 2D chuyên sâu: dựng hình học phẳng thuần túy, thanh trượt biến thiên tham số động, thước đo, compa, vẽ quỹ tích và tích hợp máy tính khoa học.
+        </p>
+
+        <div class="card-tags">
+          <span class="card-tag">Offline App</span>
+          <span class="card-tag">Hình học phẳng 2D</span>
+          <span class="card-tag">Thanh trượt động</span>
+          <span class="card-tag">Thước &amp; Compa</span>
+          <span class="card-tag">Bảng phấn 2D</span>
+        </div>
+
+        <div class="card-actions">
+          <a href="toan/hh2D.html" class="btn-launch" target="_blank">
+            <span>Mở Hình Học 2D Ver2</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+      </article>
+
+      <!-- ==================== 5. TÀI LIỆU TOÁN HỌC ==================== -->
+      <article class="tool-card card-tailieu" data-key="5" data-tags="tailieutoanhoc tailieutonghop sach toan thpt le trung kien cong thuc pdf">
+        <div class="card-top">
+          <div class="card-icon-wrap">
+            <i class="fa-solid fa-book-open-reader"></i>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="card-badge-status">
+              <span class="status-dot static"></span>
+              <span>Offline / Sẵn sàng</span>
+            </span>
+            <span class="card-quickkey">Phím 5</span>
+          </div>
+        </div>
+
+        <div class="card-title-group">
+          <h2 class="card-title">
+            Tài Liệu Toán Học
+          </h2>
+          <div class="card-subtitle">Tóm Tắt Toàn Bộ Kiến Thức Toán THPT</div>
+        </div>
+
+        <p class="card-desc">
+          Sách và sổ tay công thức tra cứu kiến thức Toán cấp 3 của Thầy Lê Trung Kiên, tích hợp trình đọc PDF thông minh cùng mục lục điều hướng tiện lợi.
+        </p>
+
+        <div class="card-tags">
+          <span class="card-tag">Tài liệu THPT</span>
+          <span class="card-tag">Tra cứu công thức</span>
+          <span class="card-tag">Trình đọc PDF</span>
+          <span class="card-tag">Mục lục thông minh</span>
+        </div>
+
+        <div class="card-actions">
+          <a href="toan/tailieutonghop.html" class="btn-launch" target="_blank">
+            <span>Mở Tài Liệu Toán</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+      </article>
+
+    </div>
+
+    <!-- Empty search notice -->
+    <div id="noResultsNotice" style="display: none; text-align: center; padding: 4rem 1rem;">
+      <i class="fa-solid fa-magnifying-glass" style="font-size: 2.5rem; color: var(--text-subtle); margin-bottom: 1rem;"></i>
+      <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Không tìm thấy công cụ phù hợp</h3>
+      <p style="color: var(--text-muted); font-size: 0.95rem;">Thử tìm kiếm với từ khóa khác như "vinacal", "2d", "3d", hoặc "edushare".</p>
+    </div>
+
+  </main>
+
+  <!-- ==================== FOOTER ==================== -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <i class="fa-solid fa-shapes" style="color: var(--primary);"></i>
+        <span>Math Hub &bull; Cổng Điều Hướng Công Cụ Học Tập</span>
+      </div>
+      <div>
+        <span>Nhấn phím <b>1 – 5</b> để truy cập nhanh từng công cụ</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ==================== LOGIC SCRIPTS ==================== -->
+  <script>
+    // ----------------------------------------------------
+    // 1. THEME SWITCHER (DARK / LIGHT)
+    // ----------------------------------------------------
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const themeIcon = document.getElementById('themeIcon');
+    const htmlEl = document.documentElement;
+
+    function applyTheme(theme) {
+      htmlEl.setAttribute('data-theme', theme);
+      localStorage.setItem('math_hub_theme', theme);
+      if (theme === 'light') {
+        themeIcon.className = 'fa-solid fa-sun';
+      } else {
+        themeIcon.className = 'fa-solid fa-moon';
+      }
+    }
+
+    const savedTheme = localStorage.getItem('math_hub_theme') || 'dark';
+    applyTheme(savedTheme);
+
+    themeToggleBtn.addEventListener('click', () => {
+      const current = htmlEl.getAttribute('data-theme');
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    // ----------------------------------------------------
+    // 2. CHECK EDUSHARE (http://192.168.1.240:5500/)
+    // ----------------------------------------------------
+    async function checkEduShareServer() {
+      const dot = document.getElementById('edushareStatusDot');
+      const text = document.getElementById('edushareStatusText');
+      const badge = document.getElementById('edushareStatusBadge');
+
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+        await fetch('http://192.168.1.240:5500/', {
+          mode: 'no-cors',
+          cache: 'no-cache',
+          signal: controller.signal
+        });
+
+        clearTimeout(timeoutId);
+        dot.className = 'status-dot online';
+        text.textContent = 'Online (Lan)';
+        badge.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+      } catch (err) {
+        dot.className = 'status-dot online';
+        text.textContent = 'EduShare 5500';
+        badge.style.borderColor = 'rgba(6, 182, 212, 0.4)';
+      }
+    }
+
+    // Run check on load
+    window.addEventListener('DOMContentLoaded', checkEduShareServer);
+
+    // ----------------------------------------------------
+    // 3. SEARCH & FILTER
+    // ----------------------------------------------------
+    const searchInput = document.getElementById('searchInput');
+    const cards = document.querySelectorAll('.tool-card');
+    const noResultsNotice = document.getElementById('noResultsNotice');
+    const countBadge = document.getElementById('toolCountBadge');
+
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      let visibleCount = 0;
+
+      cards.forEach(card => {
+        const title = card.querySelector('.card-title').textContent.toLowerCase();
+        const subtitle = card.querySelector('.card-subtitle').textContent.toLowerCase();
+        const desc = card.querySelector('.card-desc').textContent.toLowerCase();
+        const tags = card.getAttribute('data-tags') || '';
+        const haystack = `${title} ${subtitle} ${desc} ${tags}`.toLowerCase();
+
+        if (haystack.includes(query)) {
+          card.style.display = 'flex';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
+      });
+
+      countBadge.textContent = `${visibleCount} công cụ`;
+      noResultsNotice.style.display = visibleCount === 0 ? 'block' : 'none';
+    });
+
+    // ----------------------------------------------------
+    // 4. KEYBOARD SHORTCUTS (1 - 5, /)
+    // ----------------------------------------------------
+    const toolLinks = {
+      '1': { url: 'http://192.168.1.240:5500/', name: 'EduShare' },
+      '2': { url: 'smt/index.html', name: 'Vinacal 680EX' },
+      '3': { url: 'geochalk/geochalk.html', name: 'Hình Học (GeoChalk)' },
+      '4': { url: 'toan/hh2D.html', name: 'Hình Học 2D Ver2' },
+      '5': { url: 'toan/tailieutonghop.html', name: 'Tài Liệu Toán Học' }
+    };
+
+    window.addEventListener('keydown', (e) => {
+      // Focus search when pressing '/'
+      if (e.key === '/' && document.activeElement !== searchInput) {
+        e.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+        return;
+      }
+
+      // Ignore numbers if typing in an input
+      if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+        if (e.key === 'Escape') {
+          searchInput.blur();
+        }
+        return;
+      }
+
+      if (toolLinks[e.key]) {
+        e.preventDefault();
+        const tool = toolLinks[e.key];
+        showToast(`Đang chuyển hướng sang ${tool.name}...`);
+        setTimeout(() => {
+          window.location.href = tool.url;
+        }, 150);
+      }
+    });
+
+    // ----------------------------------------------------
+    // 5. TOAST NOTIFICATION
+    // ----------------------------------------------------
+    function showToast(message) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `<i class="fa-solid fa-circle-check"></i> <span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(10px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 2500);
+    }
+  </script>
+</body>
+</html>

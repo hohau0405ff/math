@@ -1,0 +1,24 @@
+# Environment variables & secrets
+.env
+*.env
+**/.env*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+
+# Uploads & test scratch files
+uploads/
+scratch/
+Động/share_tailieu/uploads/
+Động/share_tailieu/scratch/
+*.exe
+
+# IDE & Claude
+.claude/
+.vscode/
+.idea/

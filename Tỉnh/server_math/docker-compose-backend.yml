@@ -1,0 +1,57 @@
+version: '3.8'
+
+# ==============================================================================
+# HỆ THỐNG MÁY CHỦ EDUSHARE BACKEND (DOCKER COMPOSE)
+# Chạy các dịch vụ backend của EduShare:
+# 1. Redis Cache (Port 6379)
+# 2. EduShare FastAPI + SQLite + SMTP (Port 5500)
+# (Lưu ý: Hình Học chạy trực tiếp bằng Nginx + PHP-FPM, KHÔNG dùng Docker)
+# ==============================================================================
+
+services:
+  # 1. REDIS CACHE
+  redis:
+    image: redis:7-alpine
+    container_name: backend-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend-net
+
+  # 2. EDUSHARE FASTAPI BACKEND (Python 3.11)
+  edushare-api:
+    build:
+      context: ./share_tailieu
+      dockerfile: Dockerfile
+    container_name: backend-edushare-api
+    restart: unless-stopped
+    ports:
+      - "5500:5500"
+    environment:
+      - PORT=5500
+      - DATABASE_URL=sqlite:///./edushare.db
+      - REDIS_URL=redis://redis:6379/0
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=465
+      - SMTP_USER=hotrantrunghau951842@gmail.com
+      - SMTP_PASS=qtfzemasubiterqv
+      - FROM_NAME=Ban Quản Trị EduShare
+    volumes:
+      # Mount dữ liệu để không mất khi cập nhật container
+      - ./share_tailieu/edushare.db:/app/edushare.db
+      - ./share_tailieu/uploads:/app/uploads
+      - ./share_tailieu/.env:/app/.env
+    depends_on:
+      - redis
+    networks:
+      - backend-net
+
+networks:
+  backend-net:
+    driver: bridge
+
+volumes:
+  redis_data:

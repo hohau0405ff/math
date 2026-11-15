@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>Tài liệu Toán THPT - Thầy Lê Trung Kiên</title>
+
+  <!-- PDF.js library -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+  <style>
+    :root {
+      --sidebar-width: 340px;
+      --bg-dark: #1e2022;
+      --bg-sidebar: #282a2d;
+      --bg-hover: rgba(255, 255, 255, 0.08);
+      --bg-active: rgba(138, 180, 248, 0.22);
+      --text-main: #f1f3f4;
+      --text-muted: #9aa0a6;
+      --text-accent: #8ab4f8;
+      --border-color: #3c4043;
+      --header-bg: #323639;
+      --viewer-bg: #525659;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--viewer-bg);
+      color: var(--text-main);
+      display: flex;
+    }
+
+    /* Sidebar Drawer */
+    #sidebar {
+      width: var(--sidebar-width);
+      min-width: 260px;
+      max-width: 550px;
+      height: 100%;
+      background: var(--bg-sidebar);
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      user-select: none;
+      transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      z-index: 1000;
+    }
+
+    #sidebar.collapsed {
+      margin-left: calc(-1 * var(--sidebar-width));
+    }
+
+    /* Backdrop on Mobile */
+    #sidebarBackdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(2px);
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+
+    #sidebarBackdrop.visible {
+      display: block;
+      opacity: 1;
+    }
+
+    /* Sidebar Header */
+    .sidebar-header {
+      padding: 12px 14px;
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .brand-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-accent);
+      letter-spacing: 0.3px;
+    }
+
+    .brand-title svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+      flex-shrink: 0;
+    }
+
+    .close-drawer-btn {
+      display: none;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+    }
+
+    .close-drawer-btn:hover {
+      color: #fff;
+      background: var(--bg-hover);
+    }
+
+    .search-box {
+      position: relative;
+      width: 100%;
+    }
+
+    .search-box input {
+      width: 100%;
+      height: 34px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0 10px 0 34px;
+      color: var(--text-main);
+      font-size: 13.5px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-box input:focus {
+      border-color: var(--text-accent);
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 16px;
+      height: 16px;
+      fill: var(--text-muted);
+    }
+
+    .sidebar-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      padding-top: 2px;
+    }
+
+    .action-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-accent);
+      cursor: pointer;
+      font-size: 12px;
+      padding: 3px 6px;
+      border-radius: 3px;
+    }
+
+    .action-btn:hover {
+      background: var(--bg-hover);
+      text-decoration: underline;
+    }
+
+    /* Tree View */
+    .tree-container {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 8px 6px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Root Node */
+    .tree-root {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 10px;
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 6px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #e8eaed;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+    }
+
+    .tree-root:hover {
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    /* 1st Gen: Major Section */
+    .tree-section {
+      margin-bottom: 3px;
+    }
+
+    .tree-section-header {
+      display: flex;
+      align-items: center;
+      padding: 9px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #e8eaed;
+      transition: background-color 0.15s;
+      gap: 6px;
+    }
+
+    .tree-section-header:hover {
+      background: var(--bg-hover);
+      color: var(--text-accent);
+    }
+
+    .chevron {
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--text-muted);
+      transition: transform 0.2s ease;
+    }
+
+    .tree-section.open > .tree-section-header .chevron {
+      transform: rotate(90deg);
+      color: var(--text-accent);
+    }
+
+    .section-title-text {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .section-badge {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 7px;
+      border-radius: 10px;
+      flex-shrink: 0;
+    }
+
+    /* 2nd Gen: Sub items container */
+    .tree-sub-list {
+      display: none;
+      padding-left: 18px;
+      position: relative;
+      margin-left: 8px;
+      border-left: 1px dashed rgba(255, 255, 255, 0.16);
+    }
+
+    .tree-section.open > .tree-sub-list {
+      display: block;
+    }
+
+    .tree-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 8px;
+      margin: 2px 0;
+      border-radius: 4px;
+      font-size: 12.5px;
+      color: #bdc1c6;
+      cursor: pointer;
+      text-decoration: none;
+      line-height: 1.35;
+      gap: 8px;
+      position: relative;
+      transition: all 0.12s;
+    }
+
+    .tree-item::before {
+      content: "";
+      position: absolute;
+      left: -18px;
+      top: 50%;
+      width: 12px;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .tree-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-main);
+    }
+
+    .tree-item.active {
+      background: var(--bg-active);
+      color: var(--text-accent);
+      font-weight: 600;
+    }
+
+    .item-text {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .page-tag {
+      font-size: 11px;
+      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 2px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .tree-item.active .page-tag {
+      color: var(--text-accent);
+      border-color: rgba(138, 180, 248, 0.35);
+      background: rgba(138, 180, 248, 0.1);
+    }
+
+    /* Splitter / Resizer bar */
+    #resizer {
+      width: 4px;
+      height: 100%;
+      background: transparent;
+      cursor: col-resize;
+      z-index: 30;
+      flex-shrink: 0;
+      transition: background-color 0.2s;
+    }
+
+    #resizer:hover, #resizer.dragging {
+      background: var(--text-accent);
+    }
+
+    /* Main Content Area */
+    #mainContent {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--viewer-bg);
+      position: relative;
+    }
+
+    /* Top Bar */
+    #topBar {
+      height: 44px;
+      min-height: 44px;
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      user-select: none;
+      z-index: 10;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    .top-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .toggle-sidebar-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      height: 32px;
+      padding: 0 10px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.15s;
+      flex-shrink: 0;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .toggle-sidebar-btn:hover, .toggle-sidebar-btn:active {
+      background: var(--bg-hover);
+      border-color: var(--text-accent);
+      color: var(--text-accent);
+    }
+
+    .current-topic {
+      font-size: 13px;
+      color: #e8eaed;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    #activeTitle {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-accent);
+      font-weight: 600;
+    }
+
+    .top-right {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      width: 30px;
+      height: 30px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      outline: none;
+      transition: background-color 0.15s;
+    }
+
+    .nav-btn:hover {
+      background: var(--bg-hover);
+      border-color: var(--text-accent);
+    }
+
+    .jump-input {
+      width: 48px;
+      height: 28px;
+      background: var(--bg-dark);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      text-align: right;
+      padding: 0 6px;
+      font-size: 13px;
+      border-radius: 4px;
+      outline: none;
+    }
+
+    .jump-input:focus {
+      border-color: var(--text-accent);
+    }
+
+    /* Viewer Container */
+    #viewerContainer {
+      flex: 1;
+      width: 100%;
+      height: calc(100% - 44px);
+      overflow: auto;
+      background: var(--viewer-bg);
+      -webkit-overflow-scrolling: touch;
+      position: relative;
+    }
+
+    /* Native Iframe: Perfect for PC desktop file:/// with zero CORS errors */
+    #pdfFrame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: none;
+      background: #525659;
+    }
+
+    /* Mobile Canvas Wrapper */
+    #pageWrapper {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 0 40px 0;
+      min-height: 100%;
+    }
+
+    .pdf-canvas-card {
+      background: white;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      margin: 6px auto;
+      border-radius: 2px;
+      max-width: 98%;
+      display: block;
+      touch-action: pan-y pinch-zoom;
+    }
+
+    /* Floating Table of Contents button on mobile */
+    #mobileFabBtn {
+      display: none;
+      position: fixed;
+      left: 18px;
+      bottom: 22px;
+      height: 46px;
+      padding: 0 18px;
+      border-radius: 23px;
+      background: #1a73e8;
+      color: white;
+      border: none;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+      font-size: 14px;
+      font-weight: 700;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      z-index: 500;
+      transition: transform 0.15s, background 0.15s;
+    }
+
+    #mobileFabBtn:active {
+      transform: scale(0.94);
+      background: #1557b0;
+    }
+
+    /* Mobile File Picker Card (when phone browser blocks file:// fetch) */
+    #mobilePickerCard {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 40px 20px;
+      padding: 24px 20px;
+      background: var(--bg-sidebar);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      gap: 16px;
+    }
+
+    .picker-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #1a73e8;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 4px 12px rgba(26, 115, 232, 0.4);
+    }
+
+    .picker-btn:active {
+      background: #1557b0;
+    }
+
+    /* Loading Spinner */
+    #loadingOverlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--viewer-bg);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 800;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 38px;
+      height: 38px;
+      border: 3.5px solid rgba(255, 255, 255, 0.15);
+      border-top-color: var(--text-accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      #resizer {
+        display: none;
+      }
+
+      #sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 86vw;
+        max-width: 340px;
+        transform: translateX(-100%);
+        margin-left: 0 !important;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.65);
+      }
+
+      #sidebar.mobile-open {
+        transform: translateX(0);
+      }
+
+      .close-drawer-btn {
+        display: flex;
+      }
+
+      .toggle-sidebar-btn {
+        background: transparent;
+        border: none;
+        padding: 0 4px;
+      }
+
+      .toggle-sidebar-btn .btn-text {
+        display: none;
+      }
+
+      .current-topic {
+        font-size: 12.5px;
+      }
+
+      #mobileFabBtn {
+        display: flex;
+      }
+
+      #pageWrapper {
+        padding: 6px 0 75px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nền tối mờ phía sau khi mở menu trên Điện thoại -->
+  <div id="sidebarBackdrop"></div>
+
+  <!-- Sidebar: Cây thư mục mục lục (Gốc -> Đề mục lớn -> Đề mục nhỏ) -->
+  <aside id="sidebar" class="collapsed">
+    <div class="sidebar-header">
+      <div class="brand-row">
+        <div class="brand-title">
+          <svg viewBox="0 0 24 24">
+            <path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/>
+          </svg>
+          <span>MỤC LỤC TOÁN THPT</span>
+        </div>
+        <button class="close-drawer-btn" id="closeDrawerBtn" title="Đóng mục lục">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="search-box">
+        <svg viewBox="0 0 24 24">
+          <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+        <input type="text" id="filterInput" placeholder="Tìm đề mục hoặc số trang...">
+      </div>
+
+      <div class="sidebar-actions">
+        <span id="statsText">73 chuyên đề • 510 mục</span>
+        <div>
+          <button class="action-btn" id="expandAllBtn">Mở hết</button> •
+          <button class="action-btn" id="collapseAllBtn">Đóng hết</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tree Structure -->
+    <div class="tree-container" id="treeContainer">
+      <!-- Gốc cây (Website root) -->
+      <div class="tree-root" id="rootItem" title="Bấm để về đầu tài liệu">
+        <span>🌐</span>
+        <span>Toán THPT - Nguồn Thầy Lê Trung Kiên</span>
+      </div>
+
+      <!-- Danh sách đề mục lớn (hệ con thứ nhất) & đề mục nhỏ (hệ con thứ hai) -->
+      <div id="treeList"></div>
+    </div>
+  </aside>
+
+  <!-- Kéo thả kích thước sidebar (chỉ hiển thị trên desktop) -->
+  <div id="resizer"></div>
+
+  <!-- Khung hiển thị PDF chính (Tương thích 100% điện thoại và máy tính) -->
+  <main id="mainContent">
+    <div id="topBar">
+      <div class="top-left">
+        <button class="toggle-sidebar-btn" id="toggleSidebarBtn" title="Hiện mục lục">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+          </svg>
+          <span class="btn-text">Mục lục</span>
+        </button>
+        <div class="current-topic" id="currentTopicLabel">
+          <span id="activeTitle">Trang 7</span>
+        </div>
+      </div>
+
+      <div class="top-right">
+        <!-- Zoom controls -->
+        <button class="nav-btn" id="zoomOutBtn" title="Thu nhỏ">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13H5v-2h14v2z"/></svg>
+        </button>
+        <button class="nav-btn" id="zoomInBtn" title="Phóng to">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        </button>
+
+        <!-- Navigation buttons -->
+        <button class="nav-btn" id="prevPageBtn" title="Trang trước">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+        <input type="number" class="jump-input" id="directPageInput" value="7" min="1" max="388">
+        <span style="font-size: 13px; color: var(--text-muted);">/ 388</span>
+        <button class="nav-btn" id="nextPageBtn" title="Trang sau">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Container hiển thị PDF -->
+    <div id="viewerContainer">
+      <!-- 1. Native Iframe: Tuyệt đối không lỗi CORS trên PC khi mở file:/// -->
+      <iframe id="pdfFrame" src="tom-tat-toan-bo-kien-thuc-mon-toan-bac-thpt-le-trung-kien.pdf#page=7"></iframe>
+
+      <!-- 2. Mobile Canvas: Vẽ trực tiếp lên màn hình điện thoại -->
+      <div id="pageWrapper">
+        <canvas id="pdfCanvas" class="pdf-canvas-card"></canvas>
+      </div>
+
+      <!-- 3. Thẻ chọn file khi mở trên điện thoại qua file:// -->
+      <div id="mobilePickerCard">
+        <div style="font-size: 32px;">📱</div>
+        <div style="font-size: 15px; font-weight: 600; color: #fff;">Chế độ xem trên Điện Thoại</div>
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5;">
+          Trình duyệt điện thoại chặn tự động đọc file qua giao thức nội bộ. Vui lòng bấm nút bên dưới và chọn file sách <strong>tom-tat-toan-bo-kien-thuc-mon-toan-bac-thpt-le-trung-kien.pdf</strong> một lần duy nhất:
+        </p>
+        <label class="picker-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/>
+          </svg>
+          <span>Chọn file PDF để mở</span>
+          <input type="file" id="pdfFileInput" accept="application/pdf" style="display: none;">
+        </label>
+      </div>
+
+      <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div id="loadingText" style="font-size: 13.5px; color: var(--text-muted);">Đang mở tài liệu...</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Nút mở mục lục nổi trên điện thoại (Floating button) -->
+  <button id="mobileFabBtn" title="Bấm để mở bảng mục lục">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+    </svg>
+    <span>Mục lục</span>
+  </button>
+
+  <script>
+    // Cấu hình PDF.js
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const PDF_URL = 'tom-tat-toan-bo-kien-thuc-mon-toan-bac-thpt-le-trung-kien.pdf';
+
+    // Dữ liệu cây mục lục 2 cấp
+    const TREE_DATA = [{"title": "MỆNH ĐỀ", "page": 18, "items": [{"title": "1. Mệnh đề là gì?", "page": 18}, {"title": "2. Một số kiến thức cũ", "page": 18}, {"title": "3. Mệnh đề chứa biến", "page": 19}, {"title": "4. Mệnh đề phủ định", "page": 19}, {"title": "5. Mệnh đề kéo theo", "page": 21}, {"title": "6. Mệnh đề đảo", "page": 21}, {"title": "7. Mệnh đề tương đương", "page": 21}, {"title": "8. Kí hiệu ∀ và ∃", "page": 21}]}, {"title": "TẬP HỢP", "page": 22, "items": [{"title": "9. Kí hiệu", "page": 22}, {"title": "10. Các tập số", "page": 22}, {"title": "11. Các cách cho một tập hợp", "page": 22}, {"title": "12. Tập con và hai tập hợp bằng nhau", "page": 23}, {"title": "13. Biểu đồ Ven", "page": 23}, {"title": "14. Các phép toán tập hợp", "page": 24}, {"title": "15. Các tập con của tập số thực", "page": 25}]}, {"title": "BẤT PHƯƠNG TRÌNH BẬC NHẤT HAI ẨN", "page": 26, "items": [{"title": "16. Định nghĩa", "page": 26}, {"title": "17. Biểu diễn tập nghiệm", "page": 26}, {"title": "18. Hệ bất phương trình bậc nhất hai ẩn", "page": 26}, {"title": "19. Tìm cực trị biểu thức F = ax + by trên một miền đa giác", "page": 27}, {"title": "20. Áp dụng vào bài toán kinh tế", "page": 28}]}, {"title": "HÀM SỐ VÀ ĐỒ THỊ", "page": 29, "items": [{"title": "21. Định nghĩa", "page": 29}, {"title": "22. Cách cho hàm số", "page": 29}, {"title": "23. Tìm tập xác định của hàm số", "page": 29}, {"title": "24. Đồ thị hàm số", "page": 30}, {"title": "25. Sự biến thiên của hàm số", "page": 31}, {"title": "26. Khảo sát sự biến thiên của hàm số trên một khoảng", "page": 31}]}, {"title": "HÀM SỐ BẬC 2", "page": 33, "items": [{"title": "27. Định nghĩa", "page": 33}, {"title": "28. Đặc điểm đồ thị", "page": 33}, {"title": "29. Các bước vẽ đồ thị", "page": 34}, {"title": "30. Phương trình bậc hai", "page": 34}, {"title": "31. Định lý Viét", "page": 34}, {"title": "32. Định lý Viét đảo", "page": 34}, {"title": "33. Một số điều kiện về nghiệm", "page": 35}, {"title": "34. Các dạng biểu diễn của hàm số bậc 2", "page": 35}]}, {"title": "GIÁ TRỊ LƯỢNG GIÁC TỪ 0° ĐẾN 180°", "page": 36, "items": [{"title": "35. Định nghĩa nửa đường tròn đơn vị", "page": 36}, {"title": "36. Xác định góc từ 0° đến 180° trên nửa đường tròn đơn vị", "page": 36}, {"title": "37. Xác định giá trị lượng giác của góc từ 0° đến 180°", "page": 37}, {"title": "38. Giá trị lượng giác của các góc phụ và bù", "page": 37}, {"title": "39. Giá trị lượng giác của các góc đặc biệt", "page": 38}, {"title": "40. Hệ thức cơ bản", "page": 38}]}, {"title": "HỆ THỨC LƯỢNG TRONG TAM GIÁC VUÔNG", "page": 39, "items": [{"title": "HỆ THỨC LƯỢNG TRONG TAM GIÁC VUÔNG", "page": 39}]}, {"title": "HỆ THỨC LƯỢNG TRONG TAM GIÁC TÙY Ý", "page": 40, "items": [{"title": "41. Quy ước về kí hiệu cạnh, góc", "page": 40}, {"title": "42. Định lý cos", "page": 40}, {"title": "43. Định lý sin", "page": 41}, {"title": "44. Độ dài trung tuyến và phân giác trong", "page": 41}, {"title": "45. Diện tích tam giác", "page": 42}, {"title": "46. Diện tích tam giác và đa giác đặc biệt", "page": 42}, {"title": "47. Các độ dài đặc biệt", "page": 43}]}, {"title": "VECTƠ", "page": 45, "items": [{"title": "48. Các khái niệm", "page": 45}, {"title": "49. Cộng vectơ", "page": 47}, {"title": "50. Vectơ đối", "page": 48}, {"title": "51. Hiệu của hai vectơ", "page": 48}, {"title": "52. Tích của một số với một vectơ", "page": 48}, {"title": "53. Một số hệ thức quan trọng", "page": 48}, {"title": "54. Điều kiện cùng phương, thẳng hàng", "page": 49}]}, {"title": "TÍCH VÔ HƯỚNG", "page": 50, "items": [{"title": "55. Góc giữa 2 vectơ", "page": 50}, {"title": "56. Tích vô hướng", "page": 50}, {"title": "57. Tính chất", "page": 51}, {"title": "58. Điểm thỏa mãn đẳng thức về tích vô hướng hay về độ dài", "page": 51}]}, {"title": "SỐ GẦN ĐÚNG, SAI SỐ", "page": 54, "items": [{"title": "59. Các hàng số", "page": 54}, {"title": "60. Ðịnh nghĩa (Sai số tuyệt đối)", "page": 54}, {"title": "61. Ðịnh nghĩa (Sai số tỷ đối)", "page": 54}, {"title": "62. Quy tắc làm tròn số", "page": 54}, {"title": "63. Xác định số quy tròn của số gần đúng với độ chính xác cho trước", "page": 55}, {"title": "64. Xác định số gần đúng của một số với độ chính xác cho trước", "page": 55}]}, {"title": "THỐNG KÊ KHÔNG GHÉP NHÓM", "page": 56, "items": [{"title": "65. Tần số, tần suất (tần số tương đối), cỡ mẫu", "page": 56}, {"title": "66. Các số đặc trưng đo xu thế trung tâm", "page": 57}, {"title": "a) Số trung bình", "page": 57}, {"title": "b) Trung vị", "page": 58}, {"title": "c) Tứ phân vị", "page": 60}, {"title": "d) Mốt", "page": 62}, {"title": "67. Các số đặc trưng cho mức độ phân tán", "page": 64}, {"title": "a) Khoảng biến thiên", "page": 64}, {"title": "b) Khoảng tứ phân vị", "page": 65}, {"title": "c) Phương sai, độ lệch chuẩn", "page": 68}, {"title": "68. Giá trị ngoại lệ", "page": 70}, {"title": "69. Bấm máy tính các số liệu thống kê", "page": 71}]}, {"title": "DẤU CỦA TAM THỨC BẬC HAI", "page": 72, "items": [{"title": "70. Tam thức bậc hai là gì?", "page": 72}, {"title": "71. Dấu của tam thức bậc hai", "page": 72}, {"title": "72. Định lý về dấu của tam thức bậc hai", "page": 72}, {"title": "73. Điều kiện luôn (−) hoặc luôn (+)", "page": 74}, {"title": "74. Bất phương trình bậc hai một ẩn là gì?", "page": 74}, {"title": "75. Phương pháp giải bất phương trình bậc hai một ẩn", "page": 74}, {"title": "a) Sử dụng định lý về dấu của tam thức bậc 2", "page": 74}, {"title": "b) Sử dụng máy tính bỏ túi", "page": 74}]}, {"title": "PHƯƠNG TRÌNH QUY VỀ PHƯƠNG TRÌNH BẬC HAI", "page": 76, "items": [{"title": "PHƯƠNG TRÌNH QUY VỀ PHƯƠNG TRÌNH BẬC HAI", "page": 76}]}, {"title": "ĐẠI SỐ TỔ HỢP", "page": 77, "items": [{"title": "76. Quy tắc cộng", "page": 77}, {"title": "77. Quy tắc nhân", "page": 77}, {"title": "78. Giai thừa", "page": 78}, {"title": "79. Các mô hình rút gọn của quy tắc nhân", "page": 79}, {"title": "a) Hoán vị", "page": 79}, {"title": "b) Chỉnh hợp", "page": 80}, {"title": "c) Tổ hợp", "page": 82}, {"title": "d) Ví dụ phân biệt chỉnh hợp, tổ hợp", "page": 84}, {"title": "e) Giải thích một số công thức tổ hợp bằng hình học", "page": 85}, {"title": "80. Một số tính chất về lũy thừa", "page": 86}, {"title": "81. Tam giác Pascal", "page": 87}, {"title": "82. Nhị thức Newton", "page": 87}]}, {"title": "PHƯƠNG PHÁP TỌA ĐỘ", "page": 88, "items": [{"title": "83. Trục tọa độ", "page": 88}, {"title": "84. Hệ trục tọa độ", "page": 88}, {"title": "85. Biểu thức tọa độ phép toán vectơ & điểm quan trọng", "page": 88}, {"title": "86. Các loại tâm và điểm đặc biệt của tam giác", "page": 90}, {"title": "87. Công thức tính nhanh hình chiếu của một điểm lên một đường thẳng", "page": 92}]}, {"title": "PHƯƠNG TRÌNH ĐƯỜNG THẲNG", "page": 93, "items": [{"title": "88. Vectơ đặc trưng cho phương của đường thẳng", "page": 93}, {"title": "89. Các dạng phương trình đường thẳng", "page": 93}, {"title": "a) Phương trình tham số và chính tắc", "page": 94}, {"title": "b) Phương trình đoạn chắn", "page": 94}, {"title": "c) Phương trình dạng hệ số góc", "page": 94}, {"title": "d) Phương trình tổng quát", "page": 95}, {"title": "90. Vị trí tương đối của hai đường thẳng", "page": 95}, {"title": "91. Hệ số góc đường thẳng song song, vuông góc, tạo góc", "page": 95}, {"title": "92. Góc giữa hai đường thẳng", "page": 96}, {"title": "93. Khoảng cách từ một điểm đến một đường thẳng", "page": 97}, {"title": "94. Khoảng cách giữa hai đường thẳng song song", "page": 97}, {"title": "95. Phương trình phân giác 2 đường thẳng", "page": 97}, {"title": "96. Hai điểm cùng phía, khác phía so với 1 đường thẳng", "page": 97}, {"title": "97. Viết nhanh phương trình đường thẳng đi qua 2 điểm", "page": 98}, {"title": "98. Đối xứng điểm qua đường đặc biệt", "page": 98}]}, {"title": "PHƯƠNG TRÌNH ĐƯỜNG TRÒN", "page": 99, "items": [{"title": "99. Các dạng phương trình đường tròn", "page": 99}, {"title": "100. Tiếp tuyến đường tròn", "page": 100}, {"title": "101. Vị trí tương đối của hai đường tròn", "page": 100}, {"title": "102. Vị trí tương đối của đường thẳng và đường tròn", "page": 100}, {"title": "103. Phương trình đường tròn đi qua 3 điểm", "page": 101}]}, {"title": "ELIP", "page": 102, "items": [{"title": "104. Định nghĩa", "page": 102}, {"title": "105. Phương trình chính tắc", "page": 102}, {"title": "106. Phương trình tham số", "page": 102}, {"title": "107. Đặc điểm hình học", "page": 103}, {"title": "108. Vị trí tương đối với đường thẳng", "page": 104}, {"title": "109. Diện tích", "page": 104}]}, {"title": "HYPERBOL", "page": 105, "items": [{"title": "110. Định nghĩa", "page": 105}, {"title": "111. Phương trình chính tắc", "page": 105}, {"title": "112. Đặc điểm hình học", "page": 106}, {"title": "113. Vị trí tương đối với đường thẳng", "page": 106}]}, {"title": "PARABOL", "page": 107, "items": [{"title": "114. Định nghĩa", "page": 107}, {"title": "115. Đặc điểm hình học", "page": 107}, {"title": "116. Làm gì nếu quên công thức?", "page": 108}, {"title": "117. Đường chuẩn và tiêu điểm của y = ax2 + bx + c", "page": 108}, {"title": "118. Vị trí tương đối với đường thẳng", "page": 108}]}, {"title": "XÁC SUẤT (LỚP 10 & 11)", "page": 109, "items": [{"title": "119. Phép thử và không gian mẫu", "page": 109}, {"title": "a) Phép thử ngẫu nhiên", "page": 109}, {"title": "b) Không gian mẫu", "page": 109}, {"title": "120. Biến cố và các loại biến cố", "page": 109}, {"title": "a) Biến cố là gì?", "page": 109}, {"title": "b) Tập hợp các kết quả thuận lợi cho biến cố", "page": 109}, {"title": "c) Biến cố chắc chắn", "page": 109}, {"title": "d) Biến cố không thể", "page": 109}, {"title": "e) Biến cố xung khắc", "page": 110}, {"title": "f) Biến cố đối", "page": 110}, {"title": "g) Hai biến cố độc lập", "page": 110}, {"title": "h) Biến cố hợp", "page": 110}, {"title": "i) Biến cố giao", "page": 110}, {"title": "121. Định nghĩa cổ điển của xác xuất", "page": 110}]}, {"title": "LƯỢNG GIÁC", "page": 111, "items": [{"title": "122. Hai đơn vị đo góc cơ bản", "page": 111}, {"title": "a) Độ", "page": 111}, {"title": "b) Radian", "page": 111}, {"title": "c) Đổi độ ↔ rađian (phương pháp tỷ số)", "page": 113}, {"title": "d) Đổi độ ↔ rađian (máy tính bỏ túi)", "page": 113}, {"title": "e) Mối liên hệ giữa độ dài cung và số đo góc ở tâm trong đường tròn", "page": 113}, {"title": "f) Một số góc lượng giác đặc biệt", "page": 113}, {"title": "123. Góc lượng giác", "page": 114}, {"title": "a) Góc lượng giác âm, dương và quy ước chiều quay", "page": 114}, {"title": "b) Hệ thức Chasles", "page": 116}, {"title": "c) Cách xác định góc", "page": 116}, {"title": "d) Công thức cho 1 tia lượng giác", "page": 117}, {"title": "e) Công thức các tia lượng giác cách đều nhau", "page": 117}, {"title": "124. Định nghĩa các giá trị lượng giác", "page": 118}, {"title": "a) Định nghĩa sin", "page": 118}, {"title": "b) Định nghĩa cos", "page": 118}, {"title": "c) Định nghĩa tan", "page": 118}, {"title": "d) Định nghĩa cot", "page": 119}, {"title": "125. Dấu của các giá trị lượng giác", "page": 120}, {"title": "126. Các công thức cơ bản", "page": 121}, {"title": "127. Công thức cộng", "page": 121}, {"title": "128. Công thức nhân đôi", "page": 121}, {"title": "129. Công thức hạ bậc", "page": 121}, {"title": "130. Công thức nhân ba", "page": 121}, {"title": "131. Công thức tổng thành tích", "page": 121}, {"title": "132. Công thức tích thành tổng", "page": 121}, {"title": "133. Số đo các góc liên quan đặc biệt", "page": 122}, {"title": "134. Một số công thức khác", "page": 123}]}, {"title": "HÀM SỐ LƯỢNG GIÁC", "page": 124, "items": [{"title": "135. Sự biến thiên & Đồ thị các hàm lượng giác cơ bản", "page": 124}]}, {"title": "PHƯƠNG TRÌNH LƯỢNG GIÁC", "page": 126, "items": [{"title": "136. Phương trình sin", "page": 126}, {"title": "137. Phương trình cos", "page": 126}, {"title": "138. Phương trình tan", "page": 126}, {"title": "139. Phương trình cot", "page": 126}, {"title": "140. Một số dạng phổ biến", "page": 127}, {"title": "a) Dạng sin2(x)=a hoặc cos2(x)=a", "page": 127}, {"title": "b) Phương trình dạng bậc hai", "page": 127}, {"title": "c) Dạng a×sin(x)+b×cos(x)=c", "page": 128}, {"title": "d) Dạng: a×sin2(x)+b×sin(x)×cos(x)+c×cos2(x)=d", "page": 128}, {"title": "e) Phương trình đẳng cấp", "page": 129}, {"title": "f) Phương trình đối xứng theo sin và cos", "page": 129}, {"title": "g) Phương trình chứa đồng thời sin ± cos và sin × cos", "page": 129}]}, {"title": "PHƯƠNG PHÁP QUY NẠP TOÁN HỌC", "page": 130, "items": [{"title": "PHƯƠNG PHÁP QUY NẠP TOÁN HỌC", "page": 130}]}, {"title": "DÃY SỐ", "page": 132, "items": [{"title": "141. Định nghĩa dãy số", "page": 132}, {"title": "142. Những cách cho dãy số", "page": 132}, {"title": "143. Biểu diễn hình học của dãy số", "page": 132}, {"title": "144. Tính tăng, giảm của dãy số", "page": 133}, {"title": "145. Phương pháp xét tính tăng, giảm của dãy số", "page": 134}, {"title": "146. Dãy số bị chặn", "page": 134}, {"title": "147. Công thức số hạng tổng quát dạng đa thức", "page": 135}, {"title": "148. Dãy tổng có dạng Sn+1 = Sn + Đa thức bậc m", "page": 136}, {"title": "149. Dãy tổng dạng Sn+1 = Sn + (Đa thức bậc m theo n) × 𝛽n", "page": 137}, {"title": "150. Dãy số un = A×un-1 + B", "page": 138}]}, {"title": "CẤP SỐ CỘNG", "page": 139, "items": [{"title": "CẤP SỐ CỘNG", "page": 139}]}, {"title": "CẤP SỐ NHÂN", "page": 140, "items": [{"title": "CẤP SỐ NHÂN", "page": 140}]}, {"title": "GIỚI HẠN DÃY SỐ", "page": 141, "items": [{"title": "151. Một bài toán mở đầu về khái niệm giới hạn dãy số", "page": 141}, {"title": "152. Giới hạn dãy số là gì?", "page": 142}, {"title": "153. Bấm máy tính tìm giới hạn dãy số", "page": 142}, {"title": "154. Dãy số có giới hạn 0", "page": 147}, {"title": "a) Định nghĩa", "page": 147}, {"title": "b) Một số dãy số có giới hạn 0", "page": 148}, {"title": "c) Định lý kẹp", "page": 148}]}, {"title": "DÃY SỐ CÓ GIỚI HẠN HỮU HẠN", "page": 149, "items": [{"title": "155. Định nghĩa", "page": 149}, {"title": "156. Quy tắc tính giới hạn hữu hạn", "page": 149}, {"title": "157. Tổng của cấp số nhân lùi vô hạn", "page": 149}]}, {"title": "DÃY SỐ CÓ GIỚI HẠN VÔ CỰC", "page": 150, "items": [{"title": "158. Định nghĩa", "page": 150}, {"title": "159. Quy tắc tìm giới hạn vô cực", "page": 150}, {"title": "160. Các giới hạn hỗn hợp nmũ, sốn, n!, nn", "page": 151}]}, {"title": "CÁC KỸ THUẬT TÍNH GIỚI HẠN DÃY SỐ", "page": 152, "items": [{"title": "CÁC KỸ THUẬT TÍNH GIỚI HẠN DÃY SỐ", "page": 152}]}, {"title": "GIỚI HẠN HÀM SỐ", "page": 155, "items": [{"title": "161. Giới hạn hàm số là gì?", "page": 155}, {"title": "162. Các loại ký hiệu giới hạn hàm số", "page": 156}, {"title": "163. Bấm máy tìm giới hạn hàm số", "page": 156}, {"title": "164. Các định nghĩa giới hạn hàm số", "page": 160}, {"title": "165. Tính giới hạn của hàm số bằng định nghĩa", "page": 161}, {"title": "166. Chứng minh hàm số không tồn tại giới hạn", "page": 161}, {"title": "167. Quy tắc tìm giới hạn hữu hạn", "page": 161}, {"title": "168. Quy tắc tìm giới han vô cực", "page": 162}]}, {"title": "CÁC DẠNG VÔ ĐỊNH", "page": 163, "items": [{"title": "169. Giải thích các dạng vô định", "page": 163}, {"title": "170. Kỹ thuật tìm giới hạn khi gặp dạng vô định", "page": 164}]}, {"title": "GIỚI HẠN MỘT BÊN", "page": 167, "items": [{"title": "171. Định nghĩa giới hạn hữu hạn và vô hạn", "page": 167}, {"title": "172. Điều kiện hàm số có giới hạn", "page": 168}]}, {"title": "HÀM SỐ LIÊN TỤC TẠI MỘT ĐIỂM", "page": 169, "items": [{"title": "173. Định nghĩa", "page": 169}, {"title": "174. Xét tính liên tục của hàm số tại một điểm", "page": 169}, {"title": "175. Tìm điều kiện của tham số để hàm số liên tục tại một điểm", "page": 170}]}, {"title": "HÀM SỐ LIÊN TỤC TRÊN KHOẢNG, ĐOẠN", "page": 171, "items": [{"title": "176. Các định nghĩa", "page": 171}, {"title": "177. Định lý giá trị trung gian", "page": 171}, {"title": "178. Ứng dụng tính liên tục để chứng minh sự có nghiệm", "page": 172}]}, {"title": "ĐẠO HÀM", "page": 174, "items": [{"title": "179. Định nghĩa", "page": 174}, {"title": "180. Số e", "page": 175}, {"title": "181. Bảng đạo hàm", "page": 176}, {"title": "182. Quy tắc tính", "page": 177}, {"title": "183. Công thức tính nhanh", "page": 177}, {"title": "184. Ý nghĩa cơ học", "page": 177}, {"title": "185. Hệ số góc đường thẳng", "page": 178}, {"title": "186. Hệ số góc đường thẳng song song, vuông góc, tạo góc", "page": 178}, {"title": "187. Phương trình tiếp tuyến", "page": 179}]}, {"title": "LŨY THỪA", "page": 181, "items": [{"title": "188. Các định nghĩa", "page": 181}, {"title": "189. Điều kiện của (f(x))𝛼", "page": 181}, {"title": "190. Tính chất", "page": 181}, {"title": "191. So sánh lũy thừa cùng cơ số", "page": 181}, {"title": "192. Lãi đơn", "page": 182}, {"title": "193. Lãi kép", "page": 182}, {"title": "194. Một số bài toán lãi suất khác", "page": 183}]}, {"title": "HÀM SỐ LŨY THỪA", "page": 184, "items": [{"title": "195. Định nghĩa", "page": 184}, {"title": "196. Đạo hàm", "page": 184}, {"title": "197. Sự biến thiên và đồ thị", "page": 184}]}, {"title": "HÀM SỐ MŨ", "page": 187, "items": [{"title": "198. Định nghĩa hàm số mũ", "page": 187}, {"title": "199. Đạo hàm của hàm số mũ", "page": 187}, {"title": "200. Sự biến thiên và đồ thị hàm số mũ", "page": 187}]}, {"title": "CĂN BẬC", "page": 189, "items": [{"title": "201. Định nghĩa", "page": 189}, {"title": "202. Tính chất", "page": 189}]}, {"title": "LOGARIT", "page": 190, "items": [{"title": "203. Định nghĩa", "page": 190}, {"title": "204. Tính chất", "page": 192}, {"title": "205. Hàm số logarit", "page": 193}, {"title": "206. Mối liên hệ giữa y = loga(x) và y = ax", "page": 194}]}, {"title": "PHƯƠNG TRÌNH, BẤT PHƯƠNG TRÌNH MŨ VÀ LOGARIT", "page": 195, "items": [{"title": "207. Phương trình mũ", "page": 195}, {"title": "208. Bất phương trình mũ", "page": 196}, {"title": "209. Phương trình logarit", "page": 196}, {"title": "210. Bất phương trình logarit", "page": 197}]}, {"title": "HÌNH KHÔNG GIAN (THAO TÁC PHỤ, KÍ HIỆU)", "page": 198, "items": [{"title": "211. Kí hiệu mặt phẳng", "page": 198}, {"title": "212. Điểm ∈ đường hoặc mặt", "page": 198}, {"title": "213. Quy ước vẽ hình", "page": 198}, {"title": "214. Vị trí tương đối", "page": 199}, {"title": "215. Lý do điểm ∈ mặt phẳng", "page": 199}, {"title": "216. Xác định 4 điểm đồng phẳng", "page": 199}, {"title": "217. Xác định 2 đường thẳng tạo bởi 4 điểm cắt nhau", "page": 200}, {"title": "218. Tìm một điểm chung giữa hai mặt phẳng", "page": 200}, {"title": "219. Điều kiện xác định mặt phẳng", "page": 200}, {"title": "220. Lưu ý kí hiệu khi viết chứng minh", "page": 201}, {"title": "221. Định lý Menelaus", "page": 201}]}, {"title": "DẠNG TOÁN CHỨNG MINH TÍNH CHẤT", "page": 203, "items": [{"title": "222. Tìm một điểm nằm trên giao tuyến của hai mặt phẳng", "page": 203}, {"title": "223. Tìm giao điểm giữa đường thẳng và mặt phẳng", "page": 203}, {"title": "224. Tìm giao tuyến của hai mặt phẳng", "page": 204}, {"title": "225. Chứng minh ba điểm thẳng hàng", "page": 204}, {"title": "226. Tìm tập hợp giao điểm của hai đường thẳng di động", "page": 205}, {"title": "227. Chứng minh hai đường thẳng song song", "page": 205}, {"title": "228. Chứng minh ba đường thẳng đồng quy", "page": 205}, {"title": "229. Xác định thiết diện của hình chóp và mặt phẳng", "page": 206}, {"title": "230. Xét vị trí tương đối của hai đường thẳng phân biệt", "page": 207}, {"title": "231. Chứng minh đường thẳng song song với mặt phẳng", "page": 207}, {"title": "232. Chứng minh hai mặt phẳng song song", "page": 208}, {"title": "233. Chứng minh ba vectơ đồng phẳng", "page": 209}, {"title": "234. Chứng minh bốn điểm đồng phẳng thông qua vectơ", "page": 210}, {"title": "235. Chứng minh đường thẳng vuông góc với mặt phẳng", "page": 210}, {"title": "236. Chứng minh hai đường thẳng vuông góc", "page": 211}, {"title": "237. Chứng minh hai mặt phẳng vuông góc", "page": 211}, {"title": "238. Tìm hình chiếu vuông góc của một điểm lên một mặt phẳng", "page": 212}]}, {"title": "DẠNG TOÁN TÍNH GÓC, KHOẢNG CÁCH", "page": 214, "items": [{"title": "239. Tìm góc giữa hai đường thẳng", "page": 214}, {"title": "240. Tìm góc giữa đường thẳng và mặt phẳng", "page": 215}, {"title": "241. Tìm góc giữa hai mặt phẳng", "page": 215}, {"title": "242. Góc nhị diện và góc phẳng nhị diện", "page": 217}, {"title": "243. Khoảng cách giữa điểm và mặt phẳng", "page": 218}, {"title": "244. Khoảng cách giữa đường thẳng và mặt phẳng song song", "page": 219}, {"title": "245. Khoảng cách giữa hai mặt phẳng song song", "page": 220}, {"title": "246. Khoảng cách giữa hai đường thẳng chéo nhau", "page": 220}]}, {"title": "CÁC ĐỊNH LÝ VỀ VUÔNG GÓC  VÀ SONG SONG", "page": 223, "items": [{"title": "CÁC ĐỊNH LÝ VỀ VUÔNG GÓC  VÀ SONG SONG", "page": 223}]}, {"title": "CÁC HÌNH KHỐI CƠ BẢN", "page": 226, "items": [{"title": "CÁC HÌNH KHỐI CƠ BẢN", "page": 226}]}, {"title": "KHỐI ĐA DIỆN VÀ THỂ TÍCH", "page": 230, "items": [{"title": "247. Hình đa diện, khối đa diện", "page": 230}, {"title": "248. Khối đa diện lồi", "page": 230}, {"title": "249. Khối đa diện đều", "page": 231}, {"title": "250. Mặt phẳng và trục đối xứng", "page": 233}, {"title": "251. Thể tích đa diện", "page": 235}, {"title": "252. Độ dài và diện tích đặc biệt", "page": 239}, {"title": "253. Định lý Menelaus", "page": 239}, {"title": "254. Tam diện vuông", "page": 239}]}, {"title": "THỐNG KÊ GHÉP NHÓM", "page": 240, "items": [{"title": "255. Lưu ý bấm máy tính", "page": 240}, {"title": "256. Cỡ mẫu, giá trị đại diện, độ dài nhóm, quy tắc ghép nhóm", "page": 240}, {"title": "257. Các số đặc trưng đo xu thế trung tâm", "page": 241}, {"title": "a) Số trung bình", "page": 241}, {"title": "b) Trung vị", "page": 242}, {"title": "c) Tứ phân vị", "page": 245}, {"title": "d) Mốt", "page": 250}, {"title": "258. Các số đặc trưng cho mức độ phân tán", "page": 251}, {"title": "a) Khoảng biến thiên", "page": 251}, {"title": "b) Khoảng tứ phân vị", "page": 253}, {"title": "c) Phương sai và độ lệch chuẩn", "page": 254}, {"title": "259. Giá trị ngoại lệ", "page": 255}]}, {"title": "ỨNG DỤNG ĐẠO HÀM ĐỂ KHẢO SÁT HÀM SỐ", "page": 256, "items": [{"title": "ỨNG DỤNG ĐẠO HÀM ĐỂ KHẢO SÁT HÀM SỐ", "page": 256}]}, {"title": "TÍNH ĐƠN ĐIỆU", "page": 256, "items": [{"title": "260. Các dấu hiệu xét tính đơn điệu của hàm số", "page": 256}, {"title": "a) Tính đơn điệu dựa vào so sánh", "page": 256}, {"title": "b) Tính đơn điệu dựa vào tỷ số", "page": 256}, {"title": "c) Tính đơn điệu dựa vào đồ thị hàm số", "page": 257}, {"title": "d) Tính đơn điệu dựa vào dấu đạo hàm", "page": 257}, {"title": "e) Tính đơn điệu dựa vào bảng biến thiên", "page": 257}, {"title": "261. Một số nhận xét", "page": 258}, {"title": "262. Xét dấu biểu thức", "page": 259}, {"title": "263. Tìm điều kiện tham số từ biểu thức chứa x và m", "page": 260}, {"title": "264. Xét tính đơn điệu biết công thức hàm số", "page": 261}, {"title": "265. Tính đơn điệu hàm bậc 3", "page": 261}, {"title": "266. Tính đơn điệu hàm bậc nhất / bậc nhất", "page": 262}, {"title": "267. Tìm điều kiện hàm số đơn điệu trên 1 tập (tổng quát)", "page": 262}, {"title": "268. Tìm tham số để hàm |f(x)| đơn điệu", "page": 263}]}, {"title": "CỰC TRỊ HÀM SỐ", "page": 264, "items": [{"title": "269. Thuật ngữ", "page": 264}, {"title": "270. Định nghĩa cực trị", "page": 264}, {"title": "271. Định lí : Đạo hàm tại điểm cực trị", "page": 265}, {"title": "272. Định lí : Điều kiện có cực trị dựa vào sự đổi dấu đạo hàm", "page": 266}, {"title": "273. Định lí : Điều kiện có cực trị dựa vào đạo hàm cấp 2", "page": 266}, {"title": "274. Điều kiện hàm đạt cực trị, cực đại, cực tiểu tại một điểm", "page": 267}, {"title": "275. Số điểm cực trị của |f(x)|, f(|x|), k1f(ax+b)+k2", "page": 267}, {"title": "276. Tính nhanh cực trị, phương trình đường đi qua cực trị hàm phân thức", "page": 268}, {"title": "277. Một số nhận xét về cực trị hàm đa thức", "page": 268}, {"title": "278. Cực trị hàm bậc 3", "page": 270}, {"title": "279. Cực trị hàm bậc 4 trùng phương", "page": 274}, {"title": "280. Cực trị của hàm số cho bằng công thức cụ thể", "page": 275}]}, {"title": "GIÁ TRỊ LỚN NHẤT - GIÁ TRỊ NHỎ NHẤT", "page": 276, "items": [{"title": "281. Định nghĩa", "page": 276}, {"title": "282. Các phương pháp tìm GTLN, GTNN hàm 1 biến thường dùng", "page": 277}, {"title": "283. Một số bất đẳng thức hữu ích", "page": 277}, {"title": "284. GTLN, GTNN Hàm bậc 1 / bậc 1", "page": 277}, {"title": "285. So sánh GTLN, GTNN của |f(x)+m| với một số 𝛼", "page": 277}, {"title": "286. Tìm GTLN, GTNN của hàm số trên tập xác định", "page": 278}, {"title": "287. Tìm GTLN, GTNN của hàm số liên tục trên đoạn [a;b]", "page": 278}, {"title": "288. Tìm GTLN, GTNN của hàm số f(x) trên một tập A tùy ý", "page": 278}]}, {"title": "ĐƯỜNG TIỆM CẬN", "page": 279, "items": [{"title": "289. Định nghĩa tiệm cận ngang", "page": 279}, {"title": "290. Định nghĩa tiệm cận đứng", "page": 279}, {"title": "291. Định nghĩa tiệm cận xiên", "page": 279}, {"title": "292. Các bước tìm tiệm cận ngang", "page": 280}, {"title": "293. Các bước tìm tiệm cận đứng", "page": 280}, {"title": "294. Các bước tìm tiệm cận xiên", "page": 281}, {"title": "295. Số lượng các loại tiệm cận", "page": 281}, {"title": "296. Tiệm cận hàm bậc 1 / bậc 1", "page": 281}, {"title": "297. Tiệm cận của bậc 2 / bậc 1", "page": 281}, {"title": "298. Một số nhận xét", "page": 282}]}, {"title": "KHẢO SÁT SỰ BIẾN THIÊN  VÀ VẼ ĐỒ THỊ HÀM SỐ", "page": 283, "items": [{"title": "299. Hàm số bậc 3", "page": 283}, {"title": "a) Các bước khảo sát và vẽ đồ thị", "page": 283}, {"title": "b) Vẽ nhanh đồ thị", "page": 283}, {"title": "c) Các dạng đồ thị", "page": 283}, {"title": "d) Dấu hệ số", "page": 285}, {"title": "e) Tính đơn điệu", "page": 285}, {"title": "f) Cực trị", "page": 285}, {"title": "300. Hàm số trùng phương", "page": 286}, {"title": "a) Các bước khảo sát và vẽ đồ thị", "page": 286}, {"title": "b) Các dạng đồ thị", "page": 286}, {"title": "c) Liên hệ giữa số nghiệm phương trình trùng phương & phương trình bậc 2", "page": 287}, {"title": "d) Cực trị", "page": 287}, {"title": "301. Hàm số bậc 1 / bậc 1", "page": 288}, {"title": "a) Các bước khảo sát và vẽ đồ thị", "page": 288}, {"title": "b) Các dạng đồ thị", "page": 288}, {"title": "c) Tiệm cận & Cực trị", "page": 289}, {"title": "d) Dấu hệ số", "page": 289}, {"title": "e) Tính đơn điệu", "page": 289}, {"title": "f) Các bài toán min, max", "page": 290}, {"title": "g) Điều kiện đồ thị cắt đường thẳng tại 2 điểm", "page": 291}, {"title": "h) Điểm có tọa độ nguyên", "page": 292}, {"title": "i) Tập hợp các điểm kẻ tiếp tuyến đến đồ thị", "page": 293}, {"title": "302. Hàm bậc 2 / bậc 1", "page": 294}, {"title": "a) Khảo sát và vẽ đồ thị", "page": 294}, {"title": "b) Các dạng đồ thị", "page": 294}, {"title": "c) Cực trị", "page": 295}, {"title": "d) Tiệm cận", "page": 295}, {"title": "e) Dấu hệ số", "page": 296}, {"title": "f) Bài toán min, max", "page": 296}, {"title": "g) Tập hợp các điểm kẻ tiếp tuyến đến đồ thị", "page": 297}, {"title": "h) Điểm có tọa độ nguyên", "page": 298}]}, {"title": "MỘT SỐ BÀI TOÁN VỀ ĐỒ THỊ", "page": 299, "items": [{"title": "303. Điều kiện tiếp xúc của 2 đồ thị", "page": 299}, {"title": "304. Liên hệ giữa số nghiệm phương trình và số giao điểm của đồ thị", "page": 299}, {"title": "305. Tìm điểm cố định", "page": 299}]}, {"title": "BIẾN ĐỔI ĐỒ THỊ HÀM SỐ", "page": 300, "items": [{"title": "306. Hàm chẵn, lẻ", "page": 300}, {"title": "307. Tịnh tiến đồ thị", "page": 300}, {"title": "308. f(x) → |f(x)| hoặc f(|x|) hoặc |f(|x|)|", "page": 301}, {"title": "309. f(x) → -f(x) hoặc f(-x) hoặc -f(-x)", "page": 302}, {"title": "310. f(x) → f(kx) (k > 1)", "page": 303}, {"title": "311. f(x) → f(kx) (0 < k < 1)", "page": 304}, {"title": "312. f(x) → kf(x) với 0 < k < 1", "page": 305}, {"title": "313. f(x) → kf(x) với k > 1", "page": 306}, {"title": "314. f(x) → k1f(k2x+a)+b", "page": 306}, {"title": "315. f(x)×h(x) → |f(x)|×h(x)", "page": 306}]}, {"title": "NGUYÊN HÀM", "page": 307, "items": [{"title": "316. Khái niệm nguyên hàm", "page": 307}, {"title": "317. Bấm máy kiểm tra nguyên hàm", "page": 307}, {"title": "318. Một số định lý về liên tục, có đạo hàm, có nguyên hàm", "page": 307}, {"title": "319. Bảng nguyên hàm", "page": 308}, {"title": "320. Tính chất nguyên hàm", "page": 309}, {"title": "321. Công thức vi phân", "page": 309}, {"title": "322. Phương pháp đặt ẩn phụ", "page": 310}, {"title": "323. Nguyên tắc đưa vào hoặc đưa ra vi phân", "page": 311}, {"title": "324. Phương pháp đưa vào vi phân", "page": 312}, {"title": "325. Phương pháp lượng giác hóa", "page": 313}, {"title": "326. Nguyên hàm từng phần", "page": 314}, {"title": "327. Bảng đạo nguyên", "page": 316}, {"title": "328. Nguyên hàm các hàm có y'' = ky", "page": 317}, {"title": "329. Nguyên hàm phân thức", "page": 318}, {"title": "330. Tách nguyên hàm trên nhiều miền", "page": 319}, {"title": "331. Phương trình vi phân", "page": 320}]}, {"title": "TÍCH PHÂN", "page": 322, "items": [{"title": "332. Định nghĩa tích phân", "page": 322}, {"title": "333. Tính chất của tích phân", "page": 322}, {"title": "334. Tích phân đổi biến số", "page": 323}, {"title": "335. Tích phân từng phần", "page": 323}, {"title": "336. Một số dạng đặc biệt", "page": 324}, {"title": "337. Ý nghĩa hình học", "page": 326}, {"title": "338. Ứng dụng của tích phân", "page": 327}, {"title": "339. Một số kiến thức về hình học cần thiết", "page": 330}, {"title": "a) Đường tròn", "page": 330}, {"title": "b) Elip", "page": 331}, {"title": "c) Parabol xoay ngang", "page": 331}]}, {"title": "VECTƠ TRONG KHÔNG GIAN", "page": 332, "items": [{"title": "340. Các định nghĩa", "page": 332}, {"title": "341. Phép cộng", "page": 334}, {"title": "342. Vectơ đối và phép trừ vectơ", "page": 335}, {"title": "343. Tích của vectơ với một số", "page": 335}, {"title": "344. Tích vô hướng giữa hai vectơ", "page": 336}, {"title": "345. Trọng tâm tứ diện", "page": 336}, {"title": "346. Bài toán lực", "page": 337}]}, {"title": "HỆ TỌA ĐỘ TRONG KHÔNG GIAN", "page": 339, "items": [{"title": "347. Hệ tọa độ", "page": 339}, {"title": "348. Tọa độ điểm", "page": 339}, {"title": "349. Toạ độ vectơ", "page": 339}, {"title": "350. Biểu thức tọa độ phép toán vectơ & điểm quan trọng", "page": 340}, {"title": "351. Các loại tâm và điểm đặc biệt của tam giác", "page": 342}, {"title": "352. Kiểm tra 2 vectơ cùng phương dựa vào tỷ lệ", "page": 345}, {"title": "353. Điểm thuộc đối tượng đặc biệt", "page": 345}, {"title": "354. Hình chiếu của điểm lên đối tượng đặc biệt", "page": 346}, {"title": "355. Khoảng cách từ điểm tới đối tượng đặc biệt", "page": 346}, {"title": "356. Đối xứng điểm qua đối tượng đặc biệt", "page": 347}]}, {"title": "CÁC LOẠI TÍCH VECTƠ", "page": 348, "items": [{"title": "357. Góc giữa 2 vectơ", "page": 348}, {"title": "358. Tích vô hướng", "page": 348}, {"title": "359. Biểu thức tọa độ tích vô hướng", "page": 348}, {"title": "360. Tích có hướng", "page": 349}, {"title": "361. Phương pháp tính tích có hướng", "page": 350}, {"title": "362. Tích hỗn tạp của ba vectơ", "page": 351}, {"title": "363. Ứng dụng tích vectơ", "page": 352}]}, {"title": "PHƯƠNG TRÌNH MẶT CẦU", "page": 353, "items": [{"title": "364. Phương trình mặt cầu", "page": 353}, {"title": "365. Viết phương trình mặt cầu dạng đơn giản", "page": 353}]}, {"title": "PHƯƠNG TRÌNH MẶT PHẲNG", "page": 355, "items": [{"title": "366. Vectơ đặc trưng cho phương của mặt phẳng", "page": 355}, {"title": "367. Phương trình tổng quát của mặt phẳng", "page": 355}, {"title": "368. Phương trình mặt phẳng theo đoạn chắn", "page": 357}, {"title": "369. Các mặt phẳng đặc biệt", "page": 357}, {"title": "370. Viết phương trình mặt phẳng", "page": 358}, {"title": "a) Không có yếu tố đường thẳng và mặt cầu", "page": 358}, {"title": "b) Có chứa yếu tố đường thẳng", "page": 359}, {"title": "371. Hai điểm cùng phía, khác phía so với 1 mặt phẳng", "page": 361}]}, {"title": "PHƯƠNG TRÌNH ĐƯỜNG THẲNG", "page": 362, "items": [{"title": "372. Vectơ đặc trưng cho phương của đường thẳng", "page": 362}, {"title": "373. Phương trình tham số và chính tắc của đường thẳng", "page": 362}, {"title": "374. Một số dạng viết phương trình đường thẳng", "page": 363}]}, {"title": "VỊ TRÍ TƯƠNG ĐỐI", "page": 368, "items": [{"title": "375. Vị trí tương đối giữa 2 đường thẳng", "page": 368}, {"title": "a) Vị trí tương đối giữa 2 đường thẳng dựa vào các tích vectơ", "page": 368}, {"title": "b) Vị trí tương đối của 2 đường thẳng đã biết phương trình tham số", "page": 369}, {"title": "c) Vị trí tương đối của 2 đường thẳng dựa vào phương pháp đại số", "page": 369}, {"title": "d) Tìm tham số để 2 đường thẳng song song, trùng, cắt, chéo, vuông", "page": 370}, {"title": "376. Vị trí tương đối của đường thẳng và mặt phẳng", "page": 370}, {"title": "a) Phương pháp đại số", "page": 370}, {"title": "b) Tìm giao điểm giữa đường thẳng và mặt phẳng", "page": 371}, {"title": "c) Phương pháp hình học", "page": 371}, {"title": "377. Vị trí tương đối giữa đường thẳng và mặt cầu", "page": 372}, {"title": "378. Vị trí tương đối giữa mặt phẳng và mặt cầu", "page": 372}, {"title": "379. Vị trí tương đối giữa 2 mặt phẳng", "page": 373}]}, {"title": "HÌNH CHIẾU, ĐIỂM ĐỐI XỨNG CỦA ĐIỂM", "page": 374, "items": [{"title": "380. Tìm hình chiếu vuông góc của điểm lên đường thẳng", "page": 374}, {"title": "381. Tìm điểm đối xứng của điểm qua đường thẳng", "page": 374}, {"title": "382. Tìm hình chiếu vuông góc của điểm lên mặt phẳng", "page": 374}, {"title": "383. Tìm điểm đối xứng của điểm qua mặt phẳng", "page": 374}]}, {"title": "TỔNG HỢP VỀ GÓC, KHOẢNG CÁCH, ĐỘ DÀI", "page": 375, "items": [{"title": "384. Tổng hợp về góc", "page": 375}, {"title": "385. Tổng hợp về khoảng cách, độ dài", "page": 376}]}, {"title": "MỘT SỐ BÀI TOÁN KHÁC", "page": 378, "items": [{"title": "386. Tâm tỷ cự của hệ điểm", "page": 378}, {"title": "a) Biểu thức tổ hợp tuyến tính", "page": 378}, {"title": "b) Tổ hợp tuyến tính tổng bình phương", "page": 379}, {"title": "c) Chuyển tích vô hướng thành hiệu bình phương", "page": 380}, {"title": "387. Bài toán cực trị", "page": 380}]}, {"title": "XÁC SUẤT CÓ ĐIỀU KIỆN", "page": 386, "items": [{"title": "388. Xác suất có điều kiện", "page": 386}, {"title": "389. Công thức xác suất toàn phần", "page": 386}, {"title": "390. Công thức Bayes", "page": 386}, {"title": "391. Cách tính P(A|B)", "page": 387}, {"title": "392. Cách tính P(A⋂B)", "page": 387}, {"title": "393. Cách tính P(A)", "page": 387}]}];
+
+    let pdfDoc = null;
+    let currentPageNum = 7;
+    let pageRendering = false;
+    let pageNumPending = null;
+    let activeItemElement = null;
+    let zoomScaleFactor = 1.0;
+    let useIframeMode = false;
+
+    const pdfFrame = document.getElementById('pdfFrame');
+    const pageWrapper = document.getElementById('pageWrapper');
+    const canvas = document.getElementById('pdfCanvas');
+    const ctx = canvas.getContext('2d');
+    const viewerContainer = document.getElementById('viewerContainer');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const loadingText = document.getElementById('loadingText');
+    const mobilePickerCard = document.getElementById('mobilePickerCard');
+    const pdfFileInput = document.getElementById('pdfFileInput');
+
+    const treeList = document.getElementById('treeList');
+    const filterInput = document.getElementById('filterInput');
+    const activeTitle = document.getElementById('activeTitle');
+    const directPageInput = document.getElementById('directPageInput');
+    const sidebar = document.getElementById('sidebar');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+    const toggleSidebarBtn = document.getElementById('toggleSidebarBtn');
+    const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+    const mobileFabBtn = document.getElementById('mobileFabBtn');
+    const expandAllBtn = document.getElementById('expandAllBtn');
+    const collapseAllBtn = document.getElementById('collapseAllBtn');
+    const rootItem = document.getElementById('rootItem');
+    const prevPageBtn = document.getElementById('prevPageBtn');
+    const nextPageBtn = document.getElementById('nextPageBtn');
+    const zoomInBtn = document.getElementById('zoomInBtn');
+    const zoomOutBtn = document.getElementById('zoomOutBtn');
+
+    // Nhận biết thiết bị di động
+    const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+
+    // Chuyển sang chế độ Iframe Native (Dành cho máy tính PC, không bao giờ bị lỗi CORS trên file:///)
+    function activateIframeMode(page) {
+      useIframeMode = true;
+      pdfFrame.style.display = 'block';
+      pageWrapper.style.display = 'none';
+      mobilePickerCard.style.display = 'none';
+      loadingOverlay.style.display = 'none';
+      zoomInBtn.style.display = 'none';
+      zoomOutBtn.style.display = 'none';
+      pdfFrame.src = `${PDF_URL}?p=${page}#page=${page}`;
+    }
+
+    // Chuyển sang chế độ Canvas (Dành cho điện thoại)
+    function activateCanvasMode() {
+      useIframeMode = false;
+      pdfFrame.style.display = 'none';
+      pageWrapper.style.display = 'flex';
+      mobilePickerCard.style.display = 'none';
+      zoomInBtn.style.display = 'flex';
+      zoomOutBtn.style.display = 'flex';
+    }
+
+    // Nạp PDF từ mảng bytes (ArrayBuffer)
+    async function loadPdfFromData(dataBuffer) {
+      try {
+        loadingOverlay.style.display = 'flex';
+        loadingText.textContent = 'Đang nạp dữ liệu sách...';
+
+        const loadingTask = pdfjsLib.getDocument({ data: dataBuffer });
+        pdfDoc = await loadingTask.promise;
+        directPageInput.max = pdfDoc.numPages;
+
+        loadingOverlay.style.display = 'none';
+        activateCanvasMode();
+        renderPage(currentPageNum);
+      } catch (e) {
+        console.error('Lỗi đọc PDF từ data:', e);
+        activateIframeMode(currentPageNum);
+      }
+    }
+
+    // Nạp PDF tự động
+    async function initDocumentViewer() {
+      // Nếu là Desktop PC: Dùng trực tiếp Iframe (Hoạt động hoàn hảo 100% trên PC, không bị chặn CORS)
+      if (!isMobileDevice) {
+        activateIframeMode(currentPageNum);
+        return;
+      }
+
+      // Nếu là Điện thoại: Thử nạp qua PDF.js để vẽ Canvas
+      try {
+        loadingOverlay.style.display = 'flex';
+        loadingText.textContent = 'Đang mở tài liệu...';
+
+        const loadingTask = pdfjsLib.getDocument({
+          url: PDF_URL,
+          cMapUrl: 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/cmaps/',
+          cMapPacked: true
+        });
+
+        pdfDoc = await loadingTask.promise;
+        directPageInput.max = pdfDoc.numPages;
+
+        loadingOverlay.style.display = 'none';
+        activateCanvasMode();
+        renderPage(currentPageNum);
+      } catch (err) {
+        // Nếu điện thoại mở qua file:/// bị chặn CORS: Hiện thẻ chọn file 1 chạm
+        console.warn('CORS blocked on mobile file://, showing picker card');
+        loadingOverlay.style.display = 'none';
+        pageWrapper.style.display = 'none';
+        mobilePickerCard.style.display = 'flex';
+      }
+    }
+
+    // Xử lý khi người dùng chọn file PDF trên điện thoại
+    pdfFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        loadPdfFromData(evt.target.result);
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    // Hàm render 1 trang PDF lên canvas theo đúng độ rộng màn hình
+    async function renderPage(num) {
+      if (useIframeMode || !pdfDoc) return;
+      pageRendering = true;
+      try {
+        const page = await pdfDoc.getPage(num);
+
+        const containerWidth = viewerContainer.clientWidth - 16;
+        const unscaledViewport = page.getViewport({ scale: 1.0 });
+        const baseScale = Math.max(containerWidth / unscaledViewport.width, 0.4);
+        const finalScale = baseScale * zoomScaleFactor;
+        const viewport = page.getViewport({ scale: finalScale });
+
+        const outputScale = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(viewport.width * outputScale);
+        canvas.height = Math.floor(viewport.height * outputScale);
+        canvas.style.width = Math.floor(viewport.width) + "px";
+        canvas.style.height = Math.floor(viewport.height) + "px";
+
+        const transform = outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : null;
+
+        const renderContext = {
+          canvasContext: ctx,
+          transform: transform,
+          viewport: viewport
+        };
+
+        await page.render(renderContext).promise;
+        pageRendering = false;
+
+        if (pageNumPending !== null) {
+          renderPage(pageNumPending);
+          pageNumPending = null;
+        }
+
+        viewerContainer.scrollTop = 0;
+      } catch (e) {
+        pageRendering = false;
+        console.error(e);
+      }
+
+      directPageInput.value = num;
+    }
+
+    function queueRenderPage(num) {
+      if (pageRendering) {
+        pageNumPending = num;
+      } else {
+        renderPage(num);
+      }
+    }
+
+    // Hàm chuyển trang và đóng drawer nếu đang ở trên mobile
+    function jumpToPage(page, title) {
+      if (!page || page < 1 || (pdfDoc && page > pdfDoc.numPages)) return;
+      currentPageNum = page;
+      directPageInput.value = page;
+
+      if (title) {
+        activeTitle.textContent = `${title} (Trang ${page})`;
+      } else {
+        activeTitle.textContent = `Trang ${page}`;
+      }
+
+      if (useIframeMode) {
+        pdfFrame.src = `${PDF_URL}?p=${page}#page=${page}`;
+      } else {
+        queueRenderPage(currentPageNum);
+      }
+
+      if (window.innerWidth <= 768) {
+        closeMobileSidebar();
+      }
+    }
+
+    // Điều khiển Sidebar trên Mobile
+    function openMobileSidebar() {
+      sidebar.classList.add('mobile-open');
+      sidebar.classList.remove('collapsed');
+      sidebarBackdrop.classList.add('visible');
+    }
+
+    function closeMobileSidebar() {
+      sidebar.classList.remove('mobile-open');
+      sidebar.classList.add('collapsed');
+      sidebarBackdrop.classList.remove('visible');
+    }
+
+    function toggleSidebar() {
+      if (window.innerWidth <= 768) {
+        if (sidebar.classList.contains('mobile-open')) {
+          closeMobileSidebar();
+        } else {
+          openMobileSidebar();
+        }
+      } else {
+        sidebar.classList.toggle('collapsed');
+      }
+    }
+
+    toggleSidebarBtn.addEventListener('click', toggleSidebar);
+    mobileFabBtn.addEventListener('click', openMobileSidebar);
+    closeDrawerBtn.addEventListener('click', closeMobileSidebar);
+    sidebarBackdrop.addEventListener('click', closeMobileSidebar);
+
+    // Zoom buttons
+    zoomInBtn.addEventListener('click', () => {
+      zoomScaleFactor = Math.min(zoomScaleFactor + 0.25, 3.0);
+      renderPage(currentPageNum);
+    });
+
+    zoomOutBtn.addEventListener('click', () => {
+      zoomScaleFactor = Math.max(zoomScaleFactor - 0.25, 0.75);
+      renderPage(currentPageNum);
+    });
+
+    // Vuốt màn hình điện thoại (Swipe Gesture) để lật trang
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    viewerContainer.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    viewerContainer.addEventListener('touchend', (e) => {
+      const diffX = e.changedTouches[0].screenX - touchStartX;
+      const diffY = e.changedTouches[0].screenY - touchStartY;
+      if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY) * 1.5) {
+        if (diffX < 0) {
+          if (currentPageNum < 388) jumpToPage(currentPageNum + 1);
+        } else {
+          if (currentPageNum > 1) jumpToPage(currentPageNum - 1);
+        }
+      }
+    }, { passive: true });
+
+    // Xây dựng cây mục lục:
+    // Gốc: Trang web
+    // Con cấp 1: Đề mục lớn (Click sổ xuống / thu gọn)
+    // Con cấp 2: Đề mục nhỏ (Click nhảy ngay trang đó)
+    function renderTree(data) {
+      treeList.innerHTML = '';
+
+      data.forEach((sec, sIdx) => {
+        const secDiv = document.createElement('div');
+        secDiv.className = 'tree-section';
+        secDiv.dataset.index = sIdx;
+
+        // Header đề mục lớn (Thế hệ con thứ nhất)
+        const header = document.createElement('div');
+        header.className = 'tree-section-header';
+        header.innerHTML = `
+          <span class="chevron">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+            </svg>
+          </span>
+          <span class="section-title-text" title="${sec.title}">${sec.title}</span>
+          <span class="section-badge">${sec.items.length} mục</span>
+        `;
+
+        header.addEventListener('click', () => {
+          secDiv.classList.toggle('open');
+        });
+
+        // Danh sách mục nhỏ (Thế hệ con thứ hai)
+        const subList = document.createElement('div');
+        subList.className = 'tree-sub-list';
+
+        sec.items.forEach(item => {
+          const itemLink = document.createElement('div');
+          itemLink.className = 'tree-item';
+          itemLink.dataset.page = item.page;
+          itemLink.innerHTML = `
+            <span class="item-text" title="${item.title}">${item.title}</span>
+            <span class="page-tag">Tr. ${item.page}</span>
+          `;
+
+          // Khi bấm vào mục nhỏ: Nhảy trực tiếp đến trang đó
+          itemLink.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (activeItemElement) {
+              activeItemElement.classList.remove('active');
+            }
+            itemLink.classList.add('active');
+            activeItemElement = itemLink;
+
+            jumpToPage(item.page, item.title);
+          });
+
+          subList.appendChild(itemLink);
+        });
+
+        secDiv.appendChild(header);
+        secDiv.appendChild(subList);
+        treeList.appendChild(secDiv);
+      });
+    }
+
+    // Về trang bìa khi bấm gốc cây
+    rootItem.addEventListener('click', () => {
+      jumpToPage(1, 'Trang bìa');
+    });
+
+    // Tìm kiếm nhanh đề mục
+    filterInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const sections = treeList.querySelectorAll('.tree-section');
+
+      sections.forEach(secEl => {
+        const sIdx = secEl.dataset.index;
+        const secData = TREE_DATA[sIdx];
+        const secMatches = secData.title.toLowerCase().includes(q);
+
+        let hasMatchingChild = false;
+        const items = secEl.querySelectorAll('.tree-item');
+
+        items.forEach((itemEl, iIdx) => {
+          const itemData = secData.items[iIdx];
+          const itemMatches = itemData.title.toLowerCase().includes(q) || String(itemData.page) === q;
+
+          if (itemMatches || !q) {
+            itemEl.style.display = 'flex';
+            if (itemMatches) hasMatchingChild = true;
+          } else {
+            itemEl.style.display = 'none';
+          }
+        });
+
+        if (!q) {
+          secEl.style.display = 'block';
+          secEl.classList.remove('open');
+        } else if (secMatches || hasMatchingChild) {
+          secEl.style.display = 'block';
+          secEl.classList.add('open');
+        } else {
+          secEl.style.display = 'none';
+        }
+      });
+    });
+
+    // Nút mở hết / đóng hết
+    expandAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('.tree-section').forEach(s => s.classList.add('open'));
+    });
+
+    collapseAllBtn.addEventListener('click', () => {
+      document.querySelectorAll('.tree-section').forEach(s => s.classList.remove('open'));
+    });
+
+    // Nút trang trước / trang sau
+    prevPageBtn.addEventListener('click', () => {
+      if (currentPageNum > 1) {
+        jumpToPage(currentPageNum - 1);
+      }
+    });
+
+    nextPageBtn.addEventListener('click', () => {
+      if (currentPageNum < 388) {
+        jumpToPage(currentPageNum + 1);
+      }
+    });
+
+    // Nhập số trang trực tiếp
+    directPageInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        const p = parseInt(directPageInput.value);
+        if (p >= 1 && p <= 388) {
+          jumpToPage(p);
+        }
+      }
+    });
+
+    // Kéo giãn độ rộng sidebar trên desktop
+    const resizer = document.getElementById('resizer');
+    let isResizing = false;
+
+    resizer.addEventListener('mousedown', () => {
+      isResizing = true;
+      resizer.classList.add('dragging');
+      document.body.style.cursor = 'col-resize';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+      const newWidth = Math.max(260, Math.min(e.clientX, 600));
+      sidebar.style.width = newWidth + 'px';
+      document.documentElement.style.setProperty('--sidebar-width', newWidth + 'px');
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        resizer.classList.remove('dragging');
+        document.body.style.cursor = '';
+      }
+    });
+
+    // Tự động vẽ lại theo kích thước màn hình khi xoay điện thoại
+    let resizeTimer;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (pdfDoc && !useIframeMode) renderPage(currentPageNum);
+      }, 200);
+    });
+
+    // Khởi tạo cây mục lục
+    renderTree(TREE_DATA);
+
+    // Mở sidebar trên Desktop lúc khởi tạo, ẩn trên Mobile
+    if (window.innerWidth > 768) {
+      sidebar.classList.remove('collapsed');
+      if (treeList.children.length > 0) {
+        treeList.children[0].classList.add('open');
+      }
+    }
+
+    // Khởi tạo Viewer
+    initDocumentViewer();
+  </script>
+</body>
+</html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GeoChalk - Máy Tính Đại Số CAS (Bảng Kỹ Thuật)</title>
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <script src="GeoChalk/geochalk.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background-color: #13382c; }
+        #ggb-element { width: 100vw; height: 100vh; background-color: #13382c; }
+    </style>
+</head>
+<body>
+    <div id="ggb-element"></div>
+    <script>
+        const STORAGE_KEY = 'geochalk_state_cas';
+        const CHALKBOARD_THEME = {
+            bgColor: '#13382c',
+            axesColor: '#ffffff',
+            gridColor2D: '#2d6c57'
+        };
+
+        function apply2DGridAndAxes(api) {
+            const ggb = api || window.ggbApplet;
+            if (!ggb) return;
+            try { ggb.evalCommand("ShowAxes(true)"); } catch(e) {}
+            try { ggb.evalCommand("ShowGrid(true)"); } catch(e) {}
+            try {
+                if (ggb.setAxesVisible) ggb.setAxesVisible(1, true, true);
+                if (ggb.setGridVisible) ggb.setGridVisible(1, true);
+                if (ggb.setGraphicsOptions) {
+                    ggb.setGraphicsOptions(1, {
+                        bgColor: CHALKBOARD_THEME.bgColor,
+                        axesColor: CHALKBOARD_THEME.axesColor,
+                        gridColor: CHALKBOARD_THEME.gridColor2D,
+                        grid: true,
+                        gridIsBold: false,
+                        axes: {
+                            x: { visible: true, label: 'x', showNumbers: true },
+                            y: { visible: true, label: 'y', showNumbers: true }
+                        }
+                    });
+                }
+            } catch(e) {}
+        }
+
+        let saveTimer = null;
+        function triggerAutoSave() {
+            if (saveTimer) clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => {
+                try {
+                    const ggb = window.ggbApplet;
+                    if (ggb && ggb.getXML) {
+                        const xml = ggb.getXML();
+                        if (xml && xml.length > 50) localStorage.setItem(STORAGE_KEY, xml);
+                    }
+                } catch(e) {}
+            }, 350);
+        }
+
+        function sanitize() {
+            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+            let node;
+            while ((node = walker.nextNode())) {
+                if (node.nodeValue && node.nodeValue.includes('GeoGebra')) {
+                    node.nodeValue = node.nodeValue.replace(/GeoGebra/g, 'GeoChalk');
+                }
+            }
+        }
+        new MutationObserver(sanitize).observe(document.documentElement, { childList: true, subtree: true });
+
+        var params = {
+            "appName": "cas",
+            "vendor": "GeoChalk",
+            "width": window.innerWidth,
+            "height": window.innerHeight,
+            "showToolBar": true,
+            "showAlgebraInput": true,
+            "showMenuBar": true,
+            "allowStyleBar": true,
+            "enableRightClick": true,
+            "enableShiftDragZoom": true,
+            "showResetIcon": true,
+            "language": "vi",
+            "appletOnLoad": function(api) {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    if (saved && saved.length > 50) api.setXML(saved);
+                } catch(e) {}
+
+                apply2DGridAndAxes(api);
+
+                try {
+                    api.registerAddListener(triggerAutoSave);
+                    api.registerUpdateListener(triggerAutoSave);
+                    api.registerRemoveListener(triggerAutoSave);
+                    api.registerClientListener(function(event) {
+                        if (!event) return;
+                        if (event.type === 'viewChanged2D' || event.type === 'updateStyle' ||
+                            event.type === 'undo' || event.type === 'redo') {
+                            triggerAutoSave();
+                        }
+                        if (event.type === 'setMode' || event.type === 'perspectiveChange') {
+                            setTimeout(() => apply2DGridAndAxes(api), 80);
+                        }
+                    });
+                } catch(e) {}
+                sanitize();
+            }
+        };
+
+        var GeoChalkApplet = window.GeoChalkApplet || GGBApplet;
+        var applet = new GeoChalkApplet(params, true);
+        applet.setHTML5Codebase('GeoChalk/HTML5/5.0/web3d/');
+
+        window.addEventListener("DOMContentLoaded", function() {
+            applet.inject('ggb-element');
+        });
+
+        window.addEventListener("beforeunload", function() {
+            try {
+                const ggb = window.ggbApplet;
+                if (ggb && ggb.getXML) localStorage.setItem(STORAGE_KEY, ggb.getXML());
+            } catch(e) {}
+        });
+
+        window.addEventListener("resize", function() {
+            if (window.ggbApplet && window.ggbApplet.setSize) {
+                window.ggbApplet.setSize(window.innerWidth, window.innerHeight);
+                apply2DGridAndAxes(window.ggbApplet);
+            }
+        });
+    </script>
+</body>
+</html>

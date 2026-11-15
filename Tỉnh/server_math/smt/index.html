@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="white">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f5f7f9" id="themeColor">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="VINACAL">
+<meta name="description" content="Giả lập máy tính khoa học VINACAL 680EX PLUS III, hỗ trợ ngoại tuyến sau lần tải đầu.">
+<title>VINACAL 680EX PLUS III — Giả lập máy tính khoa học</title>
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="css/vinacal.82ce4eb71c.css">
+<script>
+  window.VINACAL_AUTH_CONFIG = { apiKey: "" };
+  Object.defineProperty(window, "VINACAL_AUTH_CONFIG", {
+    get: function() { return { apiKey: "" }; },
+    set: function() {}
+  });
+  try {
+    localStorage.setItem("vinacal680ex.auth.v2", JSON.stringify({
+      v: 1,
+      email: "offline@vinacal.local",
+      state: "active",
+      checkedAt: Date.now(),
+      refreshToken: "offline"
+    }));
+  } catch(e) {}
+</script>
+<style>
+  #authScreen, .auth-screen, #authAccount, #btnSignOut, .info-signout, .info-account {
+    display: none !important;
+  }
+</style>
+</head>
+<body>
+<svg class="icon-sprite" aria-hidden="true" focusable="false">
+<symbol id="ic-eye" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></g></symbol>
+<symbol id="ic-eye-off" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.7 8.4 2 12 2 12s3.5 7 10 7a9.6 9.6 0 0 0 5.4-1.6M9.9 9.9a3 3 0 0 0 4.2 4.2"/></g></symbol>
+<symbol id="ic-alert" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></g></symbol>
+<symbol id="ic-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></g></symbol>
+<symbol id="ic-check" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></g></symbol>
+<symbol id="ic-dot" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/></g></symbol>
+<symbol id="ic-share" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-2M12 3v12M8 7l4-4 4 4"/></g></symbol>
+<symbol id="ic-more" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></g></symbol>
+<symbol id="ic-menu" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></g></symbol>
+<symbol id="ic-bars" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></g></symbol>
+<symbol id="ic-add" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></g></symbol>
+<symbol id="ic-install" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M12 7v7M9 11l3 3 3-3M10 18h4"/></g></symbol>
+<symbol id="ic-arrow" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v16M5 13l7 7 7-7"/></g></symbol>
+<symbol id="ic-copy" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1"/></g></symbol>
+<symbol id="ic-ext" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></g></symbol>
+<symbol id="ic-help" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></g></symbol>
+<symbol id="ic-zoom" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M11 8v6M8 11h6"/></g></symbol>
+<symbol id="ic-expand" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></g></symbol>
+<symbol id="ic-refresh" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.34-5.66L20 8.5M20 3.5v5h-5"/></g></symbol>
+<symbol id="ic-sliders" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></g></symbol>
+<symbol id="ic-close" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></g></symbol>
+<symbol id="ic-tap" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13V5.5a1.5 1.5 0 0 1 3 0V11l3.6.7a2 2 0 0 1 1.6 2.3l-.8 4.6A3 3 0 0 1 14.4 21h-2.7a3 3 0 0 1-2.4-1.2L6.2 15.6a1.5 1.5 0 0 1 2.3-1.9z"/><path d="M7.5 6.5a4 4 0 0 1 8 0"/></g></symbol>
+<symbol id="ic-drag" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h4M5 3v4"/><path d="M11 3v11"/><path d="M16 9h5M19 7l2 2-2 2M8 9H3"/><path d="M11 14v-1a1.5 1.5 0 0 1 3 0l3 .6a2 2 0 0 1 1.6 2.3l-.6 3.2a2.5 2.5 0 0 1-2.5 1.9h-2.6a2.5 2.5 0 0 1-2-1l-2.2-3a1.4 1.4 0 0 1 2.2-1.7z"/></g></symbol>
+<symbol id="ic-swipe2" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h7M6 3 3 6l3 3M14 6h7M18 3l3 3-3 3"/><path d="M8 21v-7.5a1.5 1.5 0 0 1 3 0V12a1.5 1.5 0 0 1 3 0v1l2.4.5a2 2 0 0 1 1.6 2.3l-.6 2.8A3 3 0 0 1 14.5 21"/></g></symbol>
+<symbol id="ic-logout" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></g></symbol>
+</svg>
+<div id="stage">
+<div class="calc-wrap">
+<div class="calc white-skin" id="calc" role="region" aria-label="Máy tính VINACAL 680EX PLUS III" data-i18n-label="webMenu.calc">
+<div class="shell">
+<div class="bezel"></div>
+<div class="brand">VINACAL<span class="reg">®</span></div>
+<div class="model">680EX PLUS III</div>
+<div class="release-label">Phiên Bản Thử Nghiệm vn-ai</div>
+<div class="auth-sticker" aria-hidden="true"></div>
+<div class="lcd-frame">
+<div class="lcd" id="lcd" role="status" aria-label="Màn hình máy tính" data-i18n-label="webMenu.lcd" aria-live="polite" aria-atomic="true">
+<div class="lcd-status" id="lcdStatus"></div>
+<div class="lcd-body" id="lcdBody"></div>
+</div>
+</div>
+<div class="sci-label">SCIENTIFIC CALCULATOR</div>
+<div class="keys" id="keys" data-press="off"></div>
+</div>
+<div class="app-menu">
+<button class="info-trigger" id="btnInfo" type="button" aria-label="Mở tiện ích ứng dụng" data-i18n-label="webMenu.open"
+aria-haspopup="menu" aria-expanded="false" aria-controls="appMenuPanel">
+<span aria-hidden="true">i</span>
+<span class="info-dot" id="installDot" hidden></span>
+</button>
+<div class="info-panel" id="appMenuPanel" role="menu" aria-label="Tiện ích ứng dụng" data-i18n-label="webMenu.panel" hidden>
+<p class="info-panel-title" data-i18n="webMenu.title">Tiện ích</p>
+<button class="info-action" id="btnGuide" type="button" role="menuitem" aria-haspopup="dialog" aria-controls="guideDialog">
+<span class="info-action-icon" aria-hidden="true"><svg><use href="#ic-help"/></svg></span>
+<span data-i18n="webMenu.guide">Hướng dẫn</span>
+</button>
+<button class="info-action" id="btnZoom" type="button" role="menuitem" aria-pressed="false">
+<span class="info-action-icon" aria-hidden="true"><svg><use href="#ic-zoom"/></svg></span>
+<span class="info-action-label">Phóng to</span>
+</button>
+<button class="info-action" id="btnFullscreen" type="button" role="menuitem">
+<span class="info-action-icon" aria-hidden="true"><svg><use href="#ic-expand"/></svg></span>
+<span class="info-action-label">Toàn màn hình</span>
+</button>
+<button class="info-action" id="btnSettings" type="button" role="menuitem" aria-haspopup="dialog" aria-controls="settingsDialog">
+<span class="info-action-icon" aria-hidden="true"><svg><use href="#ic-sliders"/></svg></span>
+<span data-i18n="webMenu.settings">Cài đặt</span>
+</button>
+<button class="info-action" id="btnInstallApp" type="button" role="menuitem" aria-controls="installDialog" aria-describedby="appInstallStatus">
+<span class="info-action-icon" aria-hidden="true"><svg><use href="#ic-install"/></svg></span>
+<span class="info-action-label">Thêm vào màn hình chính</span>
+<span class="info-new" id="installNew" hidden>Mới</span>
+</button>
+<p class="app-update-status" id="appInstallStatus" role="status" hidden></p>
+<button class="info-action" id="btnRefreshApp" type="button" role="menuitem" aria-describedby="appUpdateStatus">
+<span class="info-action-icon" aria-hidden="true"><svg><use href="#ic-refresh"/></svg></span>
+<span class="info-action-label"></span>
+</button>
+<p class="app-update-status" id="appUpdateStatus" role="status" aria-live="polite"></p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div id="authScreen" data-state="closed" hidden style="display:none"></div>
+<dialog class="guide-dialog" id="guideDialog" aria-labelledby="guideTitle">
+<div class="guide-card">
+<header class="guide-header">
+<div>
+<p class="guide-eyebrow" data-i18n="webMenu.guideEyebrow">HƯỚNG DẪN SỬ DỤNG</p>
+<h1 id="guideTitle">VINACAL 680EX PLUS III</h1>
+<p class="sub" data-i18n="webMenu.guideSub">Giả lập máy tính khoa học — bản web</p>
+</div>
+<button class="guide-close" id="btnCloseGuide" type="button" aria-label="Đóng hướng dẫn" data-i18n-label="webMenu.guideClose"><svg aria-hidden="true"><use href="#ic-close"/></svg></button>
+</header>
+<div id="sidepanel">
+<div class="tips">
+<section class="guide-section">
+<h2 data-i18n="webMenu.shortcuts">Phím tắt bàn phím máy tính</h2>
+<ul>
+<li data-i18n-html="webMenu.shortcutLines.0"><kbd>0-9</kbd> <kbd>. + - * /</kbd> <kbd>( )</kbd> — nhập trực tiếp</li>
+<li data-i18n-html="webMenu.shortcutLines.1"><kbd>Enter</kbd> = <b>=</b> &nbsp;·&nbsp; <kbd>Backspace</kbd> = <b>DEL</b> &nbsp;·&nbsp; <kbd>Esc</kbd>/<kbd>Delete</kbd> = <b>AC</b></li>
+<li data-i18n-html="webMenu.shortcutLines.2"><kbd>←↑→↓</kbd> — di chuyển con trỏ</li>
+<li data-i18n-html="webMenu.shortcutLines.3"><kbd>Shift</kbd>/<kbd>F1</kbd> = <b>SHIFT</b> &nbsp;·&nbsp; <kbd>Alt</kbd>/<kbd>F2</kbd> = <b>ALPHA</b></li>
+<li data-i18n-html="webMenu.shortcutLines.4"><kbd>m</kbd> = MENU &nbsp;·&nbsp; <kbd>o</kbd> = OPTN &nbsp;·&nbsp; <kbd>c</kbd> = CALC</li>
+<li data-i18n-html="webMenu.shortcutLines.5"><kbd>s</kbd> = sin &nbsp;<kbd>k</kbd> = cos &nbsp;<kbd>t</kbd> = tan &nbsp;<kbd>l</kbd> = log &nbsp;<kbd>n</kbd> = ln</li>
+<li data-i18n-html="webMenu.shortcutLines.6"><kbd>r</kbd> = √ &nbsp;<kbd>q</kbd> = x² &nbsp;<kbd>^</kbd> = x▫ &nbsp;<kbd>f</kbd> = phân số &nbsp;<kbd>e</kbd> = ×10ˣ</li>
+<li data-i18n-html="webMenu.shortcutLines.7"><kbd>x</kbd> = biến x &nbsp;<kbd>a</kbd> = Ans &nbsp;<kbd>d</kbd> = S⇔D</li>
+</ul>
+</section>
+<section class="guide-section guide-utilities">
+<h2 data-i18n="webMenu.utilities">Nút tiện ích</h2>
+<div class="btnrow">
+<button id="btnLang" type="button" data-i18n="webMenu.langSwitch">Tiếng Việt / English</button>
+<button id="btnReset" type="button" data-i18n="webMenu.reset">Reset máy</button>
+<button id="btnHelp" type="button" aria-expanded="false" aria-controls="helpBox" data-i18n="webMenu.keyTable">Bảng phím</button>
+</div>
+<div id="helpBox" hidden></div>
+</section>
+</div>
+</div>
+</div>
+</dialog>
+<dialog class="guide-dialog settings-dialog" id="settingsDialog" aria-labelledby="settingsTitle" aria-describedby="settingsSub">
+<div class="guide-card">
+<header class="guide-header">
+<div>
+<h1 id="settingsTitle" data-i18n="webMenu.settings">Cài đặt</h1>
+<p class="sub" id="settingsSub" data-i18n="webMenu.settingsSub">Lưu trên trình duyệt này, mở lại vẫn giữ</p>
+</div>
+<button class="guide-close" id="btnCloseSettings" type="button" aria-label="Đóng cài đặt" data-i18n-label="webMenu.settingsClose"><svg aria-hidden="true"><use href="#ic-close"/></svg></button>
+</header>
+<div class="settings-body">
+<section class="settings-section">
+<h2 id="themePickerLabel" data-i18n="webMenu.theme">Giao diện</h2>
+<div class="theme-options" role="radiogroup" aria-labelledby="themePickerLabel">
+<button class="theme-option" id="btnThemeWhite" type="button" role="radio" data-theme-choice="white" aria-checked="true">
+<span class="theme-swatch theme-swatch-white" aria-hidden="true"></span>
+<span data-i18n="webMenu.themes.white">Trắng</span>
+</button>
+<button class="theme-option" id="btnThemeGray" type="button" role="radio" data-theme-choice="gray" aria-checked="false">
+<span class="theme-swatch theme-swatch-gray" aria-hidden="true"></span>
+<span data-i18n="webMenu.themes.gray">Xám</span>
+</button>
+<button class="theme-option" id="btnThemePink" type="button" role="radio" data-theme-choice="pink" aria-checked="false">
+<span class="theme-swatch theme-swatch-pink" aria-hidden="true"></span>
+<span data-i18n="webMenu.themes.pink">Hồng</span>
+</button>
+<button class="theme-option" id="btnThemeBlue" type="button" role="radio" data-theme-choice="blue" aria-checked="false">
+<span class="theme-swatch theme-swatch-blue" aria-hidden="true"></span>
+<span data-i18n="webMenu.themes.blue">Xanh</span>
+</button>
+<button class="theme-option" id="btnThemeBlack" type="button" role="radio" data-theme-choice="black" aria-checked="false">
+<span class="theme-swatch theme-swatch-black" aria-hidden="true"></span>
+<span data-i18n="webMenu.themes.black">Đen</span>
+</button>
+</div>
+</section>
+<section class="settings-section">
+<h2 id="keyEffectLabel" data-i18n="webMenu.keyEffect">Khi bấm phím</h2>
+<div class="effect-options" role="radiogroup" aria-labelledby="keyEffectLabel" aria-describedby="keyEffectNote">
+<button class="effect-option" id="btnEffectOff" type="button" role="radio" data-key-effect="off" aria-checked="true">
+<span class="fx-demo fx-off" aria-hidden="true"><span class="fx-key">8</span></span>
+<span class="fx-name" data-i18n="webMenu.keyEffects.off">Tắt</span>
+<span class="fx-hint" data-i18n="webMenu.keyEffects.offHint">Chỉ lún phím như máy thật</span>
+</button>
+<button class="effect-option" id="btnEffectContrast" type="button" role="radio" data-key-effect="contrast" aria-checked="false">
+<span class="fx-demo fx-contrast" aria-hidden="true"><span class="fx-key">8</span></span>
+<span class="fx-name" data-i18n="webMenu.keyEffects.contrast">Tương phản cao</span>
+<span class="fx-hint" data-i18n="webMenu.keyEffects.contrastHint">Đổi màu và giữ dấu phím vừa nhấn</span>
+</button>
+</div>
+<p class="settings-note" id="keyEffectNote" data-i18n="webMenu.keyEffectNote">Tương phản cao: phím vừa nhấn giữ màu đến khi nhấn phím tiếp theo — dễ theo dõi khi chiếu lên TV.</p>
+</section>
+<section class="settings-section touch-section">
+<div class="touch-head">
+<div class="touch-copy">
+<h2 id="lcdTouchLabel" data-i18n="webMenu.lcdTouch">Cảm ứng màn hình LCD</h2>
+<p class="settings-note" id="lcdTouchNote" data-i18n="webMenu.lcdTouchNote">Chạm, kéo, vuốt trên màn hình như điện thoại. Tắt thì màn hình chỉ để xem, như máy thật.</p>
+</div>
+<button class="touch-switch" id="btnLcdTouch" type="button" role="switch" aria-checked="false" aria-labelledby="lcdTouchLabel" aria-describedby="lcdTouchNote">
+<span class="touch-track" aria-hidden="true"><span class="touch-knob"></span></span>
+<span class="touch-state" id="lcdTouchState" aria-hidden="true">Tắt</span>
+</button>
+</div>
+<ul class="touch-tips" id="lcdTouchTips">
+<li><svg aria-hidden="true"><use href="#ic-tap"/></svg><span data-i18n-html="webMenu.lcdTouchTips.tap"><b>Chạm</b> — con trỏ tới đúng chỗ (cận tích phân, tử, mẫu…); chọn mục menu, ô bảng</span></li>
+<li><svg aria-hidden="true"><use href="#ic-drag"/></svg><span data-i18n-html="webMenu.lcdTouchTips.drag"><b>Kéo một ngón</b> — con trỏ chạy theo ngón tay; menu nhiều trang thì vuốt lên/xuống</span></li>
+<li><svg aria-hidden="true"><use href="#ic-swipe2"/></svg><span data-i18n-html="webMenu.lcdTouchTips.swipe"><b>Vuốt hai ngón</b> — cuộn công thức dài sang trái/phải; chụm vẫn phóng to</span></li>
+</ul>
+</section>
+</div>
+</div>
+</dialog>
+<dialog class="install-dialog" id="installDialog" aria-labelledby="installTitle" aria-describedby="installNote">
+<div class="inst-card">
+<span class="inst-grab" aria-hidden="true"></span>
+<header class="inst-head">
+<img class="inst-icon" src="icons/icon-192.png" alt="" width="52" height="52">
+<div><h1 id="installTitle" tabindex="-1" autofocus></h1><p id="installSub"></p></div>
+<button class="guide-close" id="btnCloseInstall" type="button" aria-label="Đóng"><svg aria-hidden="true"><use href="#ic-close"/></svg></button>
+</header>
+<p class="inst-note" id="installNote" role="status"></p>
+<div class="inst-actions" id="installActions" hidden>
+<button class="auth-btn is-primary" id="btnInstallNow" type="button" hidden><span class="auth-spin" aria-hidden="true"></span><span class="auth-btn-label"></span></button>
+<a class="auth-btn is-primary" id="installOpenChrome" href="#" hidden><svg aria-hidden="true"><use href="#ic-ext"/></svg><span class="auth-btn-label"></span></a>
+<button class="auth-btn is-secondary" id="btnCopyLink" type="button" hidden><svg aria-hidden="true"><use href="#ic-copy"/></svg><span class="auth-btn-label"></span></button>
+</div>
+<ol class="inst-steps" id="installSteps"></ol>
+<p class="inst-aside" id="installAside" hidden></p>
+</div>
+<span class="inst-pointer" id="installPointer" aria-hidden="true" hidden><svg><use href="#ic-arrow"/></svg></span>
+</dialog>
+<p class="app-toast" id="appToast" role="status" aria-live="polite"></p>
+<script src="js/vinacal.e8a0240a55.js"></script>
+</body>
+</html>

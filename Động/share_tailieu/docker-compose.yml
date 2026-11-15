@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # 1. DỊCH VỤ REDIS CACHE (Lưu mã OTP 10 phút, phiên làm việc)
+  redis:
+    image: redis:7-alpine
+    container_name: edushare-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # 2. DỊCH VỤ WEB BACKEND FASTAPI + SQL + GMAIL SMTP
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: edushare-fastapi
+    restart: unless-stopped
+    ports:
+      - "5500:5500"
+    environment:
+      - PORT=5500
+      - DATABASE_URL=sqlite:///./edushare.db
+      - REDIS_URL=redis://redis:6379/0
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=465
+      - SMTP_USER=hotrantrunghau951842@gmail.com
+      - SMTP_PASS=qtfzemasubiterqv
+      - FROM_NAME=Ban Quản Trị EduShare
+    depends_on:
+      - redis
+    volumes:
+      - .:/app
+
+volumes:
+  redis_data:

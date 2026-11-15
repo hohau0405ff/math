@@ -1,0 +1,21 @@
+# ==============================================================================
+# REWRITE RULES CHO GEOCHALK PHP BACKEND (APACHE / LITESPEED / CPANEL)
+# ==============================================================================
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Chuyển hướng các request API sang api.php
+    RewriteRule ^api/(.*)$ api.php [QSA,L]
+
+    # Nếu không phải file hoặc thư mục thực tế, trỏ về geochalk.html
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ geochalk.html [QSA,L]
+</IfModule>
+
+# Cấu hình bảo vệ database SQLite
+<Files "*.db">
+    Order Deny,Allow
+    Deny from all
+</Files>

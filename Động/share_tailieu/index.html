@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content, viewport-fit=cover">
+  <title>EduShare - Hệ Thống Trao Đổi & Chia Sẻ Tài Liệu Học Tập</title>
+
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css?v=20261105.300">
+</head>
+<body class="theme-light">
+  <div class="app-container" id="app-container">
+
+    <!-- ==================== CỘT 1: THANH ĐIỀU HƯỚNG BÊN TRÁI (NAV RAIL) ==================== -->
+    <aside class="nav-rail">
+      <div class="nav-rail-top">
+        <div class="user-avatar-wrap" id="nav-user-avatar-wrap" title="Hồ sơ cá nhân">
+          <img src="https://api.dicebear.com/7.x/bottts/svg?seed=GuestVisitor" alt="Avatar" class="avatar-img" id="nav-user-avatar">
+          <span class="status-dot online"></span>
+        </div>
+
+        <nav class="nav-items">
+          <button class="nav-btn active" data-tab="chat" title="Tin nhắn & Nhóm học tập" id="tab-nav-chat">
+            <i class="fa-solid fa-comment-dots"></i>
+            <span class="unread-badge" id="nav-unread-badge" style="display: none;">0</span>
+          </button>
+
+          <button class="nav-btn" data-tab="forum" title="Diễn đàn học sinh & Bảng tin" id="tab-nav-forum">
+            <i class="fa-solid fa-newspaper"></i>
+          </button>
+
+          <button class="nav-btn" data-tab="vault" title="Kho lưu trữ tài liệu" id="tab-nav-vault" style="display: none;">
+            <i class="fa-solid fa-folder-open"></i>
+          </button>
+
+          <button class="nav-btn" data-tab="contacts" title="Danh bạ & Bạn bè" id="tab-nav-contacts">
+            <i class="fa-solid fa-address-book"></i>
+          </button>
+
+          <button class="nav-btn nav-btn-geochalk" id="btn-open-geochalk" data-tab="geochalk" title="Mở Bảng Vẽ Hình Học GeoChalk (3D, 2D, Đồ thị)">
+            <i class="fa-solid fa-shapes"></i>
+          </button>
+        </nav>
+      </div>
+
+      <div class="nav-rail-bottom">
+        <button class="nav-btn" id="btn-theme-toggle" title="Đổi màu giao diện (Sáng / Tối / Xanh Bảng Phấn)">
+          <i class="fa-solid fa-circle-half-stroke"></i>
+        </button>
+
+        <button class="nav-btn" id="btn-drive-cfg" title="Cài đặt liên kết Google Drive" style="display: none;">
+          <i class="fa-brands fa-google-drive"></i>
+        </button>
+
+        <button class="nav-btn" id="btn-user-auth" title="Đăng nhập / Đổi tài khoản">
+          <i class="fa-solid fa-right-to-bracket"></i>
+        </button>
+      </div>
+    </aside>
+
+    <!-- ==================== CỘT 2: SIDEBAR DANH SÁCH NHÓM & BẠN BÈ ==================== -->
+    <aside class="sidebar-column" id="sidebar-column">
+      <div class="sidebar-header">
+        <div class="search-box">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="search-conversation" placeholder="Tìm nhóm, bạn bè, tin nhắn...">
+          <button class="btn-clear-search" id="btn-clear-search" style="display:none;"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="sidebar-actions">
+          <button class="icon-action-btn" id="btn-open-create-group" title="Tạo nhóm học tập mới (mã 16 ký tự)">
+            <i class="fa-solid fa-users-medical"></i>
+            <i class="fa-solid fa-plus sub-icon"></i>
+          </button>
+
+          <button class="icon-action-btn" id="btn-open-join-code" title="Tham gia nhóm bằng mã 16 ký tự">
+            <i class="fa-solid fa-key"></i>
+          </button>
+
+          <button class="icon-action-btn" id="btn-open-add-friend" title="Thêm bạn bè học tập">
+            <i class="fa-solid fa-user-plus"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs phân loại danh sách -->
+      <div class="sidebar-tabs">
+        <button class="filter-tab active" data-filter="all">Tất cả</button>
+        <button class="filter-tab" data-filter="groups">Nhóm học</button>
+        <button class="filter-tab" data-filter="friends">Bạn bè</button>
+      </div>
+
+      <!-- Danh sách hội thoại (Render động) -->
+      <div class="conversation-list" id="room-list-container">
+        <!-- Render động bằng JS -->
+      </div>
+
+      <!-- Thanh trạng thái người dùng góc dưới -->
+      <div class="current-user-status" id="current-user-status-card">
+        <div class="status-user-info" id="btn-profile-trigger" title="Bấm để chỉnh sửa hồ sơ & avatar">
+          <img src="https://api.dicebear.com/7.x/bottts/svg?seed=GuestVisitor" alt="Avatar" class="avatar-mini" id="status-bar-avatar">
+          <div class="status-texts">
+            <div class="status-user-name" id="status-bar-name">Khách (Chưa đăng nhập)</div>
+            <div class="status-user-role" id="status-bar-role">Chế độ xem tài liệu</div>
+          </div>
+        </div>
+        <button class="btn-auth-quick" id="btn-quick-auth-action">Đăng nhập</button>
+      </div>
+    </aside>
+
+    <!-- ==================== CỘT 3: VÙNG NỘI DUNG CHÍNH (MAIN VIEWPORT) ==================== -->
+    <main class="main-viewport" id="main-viewport">
+
+      <!-- ==================== PHÂN HỆ 1: PHÒNG CHAT & NHÓM HỌC TẬP ==================== -->
+      <section class="viewport-section" id="view-chat">
+        <!-- Chat Header -->
+        <header class="chat-header">
+          <div class="chat-header-left">
+            <button class="btn-mobile-back" id="btn-back-to-sidebar" title="Quay lại danh sách">
+              <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div class="chat-header-avatar" id="chat-header-avatar">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="chat-header-info">
+              <div class="title-row">
+                <h2 id="chat-title">Diễn Đàn Học Sinh - Toàn Trường</h2>
+              </div>
+              <p class="subtitle" id="chat-subtitle">
+                <i class="fa-solid fa-users"></i> <span id="chat-member-count">0</span> thành viên
+              </p>
+            </div>
+          </div>
+
+          <div class="chat-header-right">
+            <button class="btn-header-tool" id="btn-open-geochalk-header" title="Mở Bảng Vẽ Hình Học GeoChalk">
+              <i class="fa-solid fa-shapes"></i>
+              <span class="hide-mobile">Bảng vẽ</span>
+            </button>
+            <button class="btn-header-tool" id="btn-switch-to-forum-shortcut" title="Mở Bảng tin Diễn đàn">
+              <i class="fa-solid fa-newspaper"></i>
+              <span class="hide-mobile">Bảng tin</span>
+            </button>
+            <button class="btn-header-tool" id="btn-toggle-info-drawer" title="Thông tin nhóm & Quản trị">
+              <i class="fa-solid fa-circle-info"></i>
+            </button>
+          </div>
+        </header>
+
+        <!-- Khung hiển thị Tin nhắn đã ghim (Pinned Message Banner phong cách EduShare PC) -->
+        <div class="chat-pinned-banner" id="chat-pinned-banner" style="display: none;">
+          <div class="pinned-banner-left-area" id="pinned-banner-click-area" title="Bấm để cuộn đến tin nhắn được ghim">
+            <div class="pinned-banner-icon">
+              <i class="fa-regular fa-comment-dots"></i>
+            </div>
+            <div class="pinned-banner-content">
+              <span class="pinned-banner-title">Tin nhắn</span>
+              <span class="pinned-banner-snippet" id="pinned-banner-snippet">...</span>
+            </div>
+          </div>
+          <div class="pinned-banner-actions">
+            <button type="button" class="btn-pinned-dropdown" id="btn-pinned-dropdown" title="Xem danh sách ghim">
+              <span id="pinned-count-badge">1 ghim</span>
+              <i class="fa-solid fa-chevron-down" style="font-size: 10px;"></i>
+            </button>
+            <button type="button" class="btn-pinned-more" id="btn-pinned-more" title="Tùy chọn ghim">
+              <i class="fa-solid fa-ellipsis"></i>
+            </button>
+          </div>
+
+          <!-- Popover danh sách ghim (Chuẩn EduShare PC) -->
+          <div class="pinned-dropdown-popover" id="pinned-dropdown-popover" style="display: none;">
+            <div class="pinned-popover-header">
+              <span>Danh sách ghim (<span id="pinned-popover-count">0</span>)</span>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <button type="button" class="btn-unpin-all" id="btn-unpin-all" title="Bỏ ghim toàn bộ tin">Bỏ ghim tất cả</button>
+                <button type="button" class="btn-pinned-collapse" id="btn-pinned-collapse" title="Thu gọn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; display:flex; align-items:center; gap:3px;">
+                  Thu gọn <i class="fa-solid fa-chevron-up" style="font-size:10px;"></i>
+                </button>
+              </div>
+            </div>
+            <div class="pinned-popover-list" id="pinned-popover-list">
+              <!-- Render danh sách tin đã ghim bằng JS -->
+            </div>
+            <div class="pinned-popover-footer" id="pinned-popover-footer" style="padding: 8px 14px; border-top: 1px solid var(--border-color); text-align: right; background: var(--bg-secondary);">
+              <a href="javascript:void(0)" id="link-pinned-view-forum" style="font-size: 12px; color: var(--primary); text-decoration: none; font-weight: 500;">Xem tất cả ở bảng tin nhóm &gt;</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Khung danh sách tin nhắn -->
+        <div class="chat-messages-scroll" id="chat-messages-container">
+          <!-- Render tin nhắn bằng JS -->
+        </div>
+
+        <!-- Khung soạn thảo tin nhắn -->
+        <footer class="chat-composer-area" id="chat-composer-area">
+          <!-- Khóa chat khi là khách chưa đăng nhập -->
+          <div class="composer-locked-banner" id="composer-guest-locked" style="display: none;">
+            <i class="fa-solid fa-lock"></i>
+            <span>Bạn đang ở chế độ <strong>Khách (chỉ đọc)</strong>. Vui lòng đăng nhập để gửi tin nhắn và tài liệu.</span>
+            <button class="btn-primary-small" id="btn-composer-login">Đăng nhập ngay</button>
+          </div>
+
+          <!-- Khóa chat khi nhóm chỉ cho phép Trưởng/Phó gửi bài -->
+          <div class="composer-locked-banner" id="composer-admin-locked" style="display: none;">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Chỉ <strong>Trưởng nhóm</strong> và <strong>Phó nhóm</strong> mới có quyền gửi tin nhắn và tài liệu trong nhóm này.</span>
+          </div>
+
+          <!-- Khóa chat khi cuộc trò chuyện 1-1 bị chặn -->
+          <div class="composer-locked-banner" id="composer-blocked-locked" style="display: none;">
+            <i class="fa-solid fa-ban" style="color: #ef4444;"></i>
+            <span id="composer-blocked-text">Cuộc trò chuyện này đã bị chặn.</span>
+            <button type="button" class="btn-primary-small" id="btn-composer-unblock" style="display: none; margin-left: 10px;">Bỏ chặn ngay</button>
+          </div>
+
+          <!-- Thanh hiển thị xem trước ảnh dán từ Clipboard (Ctrl + V / Chụp màn hình) -->
+          <div class="chat-clipboard-preview-bar" id="chat-clipboard-preview-bar" style="display: none;">
+            <div class="clipboard-preview-left">
+              <div class="clipboard-thumb-wrapper">
+                <img id="clipboard-preview-img" src="" alt="Ảnh chụp màn hình">
+              </div>
+              <div class="clipboard-preview-info">
+                <div class="clipboard-preview-title">
+                  <span class="clipboard-filename" id="clipboard-preview-name">screenshot.png</span>
+                  <span class="clipboard-badge"><i class="fa-solid fa-paste"></i> Đã dán ảnh (Ctrl + V)</span>
+                </div>
+                <div class="clipboard-filesize" id="clipboard-preview-size">0 KB • Nhập thêm tin nhắn (nếu muốn) và bấm Gửi</div>
+              </div>
+            </div>
+            <button type="button" class="btn-cancel-clipboard" id="btn-cancel-clipboard-attach" title="Hủy ảnh này">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <!-- Thanh hiển thị trích dẫn tin nhắn đang trả lời (Reply Preview) -->
+          <div class="chat-reply-preview-bar" id="chat-reply-preview-bar" style="display: none;">
+            <div class="reply-preview-left">
+              <i class="fa-solid fa-reply"></i>
+              <div class="reply-preview-texts">
+                <span class="reply-preview-sender" id="reply-preview-sender">Trả lời ...</span>
+                <span class="reply-preview-content" id="reply-preview-content">...</span>
+              </div>
+            </div>
+            <button type="button" class="btn-cancel-reply" id="btn-cancel-reply" title="Hủy trả lời"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+
+          <!-- Popup gợi ý tag tên thành viên (@) -->
+          <div class="chat-mention-popup" id="chat-mention-popup" style="display: none;">
+            <div class="mention-popup-header"><i class="fa-solid fa-at"></i> Nhắc tên thành viên trong nhóm:</div>
+            <div class="mention-popup-list" id="mention-popup-list"></div>
+          </div>
+
+          <!-- Trình soạn thảo khi có quyền -->
+          <div class="composer-active-box" id="composer-active-box">
+            <div class="composer-toolbar">
+              <label for="chat-file-input" class="tool-icon-btn" title="Gửi tài liệu học tập (PDF, DOCX, XLSX, PPTX)">
+                <i class="fa-solid fa-paperclip"></i>
+              </label>
+              <input type="file" id="chat-file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.txt,.csv" style="display: none;">
+
+              <label for="chat-image-input" class="tool-icon-btn" title="Gửi hình ảnh">
+                <i class="fa-regular fa-image"></i>
+              </label>
+              <input type="file" id="chat-image-input" accept="image/*" style="display: none;">
+
+              <button type="button" class="tool-icon-btn" id="btn-quick-sample-doc" title="Đính kèm tài liệu mẫu (Đề thi thử 2026)">
+                <i class="fa-solid fa-file-circle-plus"></i>
+              </button>
+
+              <button type="button" class="tool-icon-btn" id="btn-open-geochalk-composer" title="Mở / Đính kèm Bản Vẽ Hình Học GeoChalk">
+                <i class="fa-solid fa-shapes"></i>
+              </button>
+
+              <div class="emoji-picker-container" style="position: relative;">
+                <button type="button" class="tool-icon-btn" id="btn-open-emoji" title="Chèn biểu cảm">
+                  <i class="fa-regular fa-face-smile"></i>
+                </button>
+                <!-- Popover chọn emoji tương tác -->
+                <div class="emoji-picker-popover" id="emoji-picker-popover" style="display: none;">
+                  <div class="emoji-popover-title">Biểu cảm & Phản ứng</div>
+                  <div class="emoji-grid" id="emoji-grid">
+                    <button type="button" class="emoji-btn">👍</button>
+                    <button type="button" class="emoji-btn">❤️</button>
+                    <button type="button" class="emoji-btn">🎉</button>
+                    <button type="button" class="emoji-btn">👏</button>
+                    <button type="button" class="emoji-btn">🔥</button>
+                    <button type="button" class="emoji-btn">📚</button>
+                    <button type="button" class="emoji-btn">💡</button>
+                    <button type="button" class="emoji-btn">💯</button>
+                    <button type="button" class="emoji-btn">🎓</button>
+                    <button type="button" class="emoji-btn">✅</button>
+                    <button type="button" class="emoji-btn">⭐</button>
+                    <button type="button" class="emoji-btn">🚀</button>
+                    <button type="button" class="emoji-btn">✍️</button>
+                    <button type="button" class="emoji-btn">💪</button>
+                    <button type="button" class="emoji-btn">😊</button>
+                    <button type="button" class="emoji-btn">🤔</button>
+                    <button type="button" class="emoji-btn">🎯</button>
+                    <button type="button" class="emoji-btn">📝</button>
+                    <button type="button" class="emoji-btn">✨</button>
+                    <button type="button" class="emoji-btn">🤝</button>
+                  </div>
+                </div>
+              </div>
+
+              <span class="drive-sync-indicator" title="Tài liệu tự động đồng bộ trong 60 ngày" style="display: none;">
+                <i class="fa-solid fa-cloud"></i> Lưu trữ 60 ngày
+              </span>
+            </div>
+
+            <!-- Ô nhập nội dung tin nhắn -->
+            <div class="composer-input-row">
+              <textarea id="chat-message-input" rows="1" placeholder="Nhập tin nhắn trao đổi... (Shift + Enter để xuống dòng)"></textarea>
+              <button class="btn-send-message" id="btn-send-chat" title="Gửi (Enter)">
+                <i class="fa-solid fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- THANH TÁC VỤ CHỌN NHIỀU TIN NHẮN (MULTI-SELECT BAR) -->
+          <div class="chat-multiselect-bar" id="chat-multiselect-bar" style="display: none;">
+            <div class="multiselect-bar-left">
+              <i class="fa-solid fa-list-check" style="color: var(--accent-primary); font-size: 16px;"></i>
+              <span>Đã chọn <strong id="multiselect-selected-count">0</strong> tin nhắn</span>
+            </div>
+            <div class="multiselect-bar-actions">
+              <button type="button" class="btn-secondary-small" id="btn-multiselect-download" title="Tải tất cả tệp/ảnh đã chọn" style="display: none;">
+                <i class="fa-solid fa-download"></i> Tải tất cả (<span id="multiselect-download-count">0</span>)
+              </button>
+              <button type="button" class="btn-primary-small" id="btn-multiselect-share" title="Chuyển tiếp các tin nhắn đã chọn">
+                <i class="fa-solid fa-share"></i> Chia sẻ
+              </button>
+              <button type="button" class="btn-danger-outline-small" id="btn-multiselect-delete" title="Xóa các tin nhắn đã chọn ở phía tôi">
+                <i class="fa-regular fa-trash-can"></i> Xóa ở phía tôi
+              </button>
+              <button type="button" class="btn-secondary-small" id="btn-multiselect-cancel" title="Hủy chế độ chọn nhiều">
+                <i class="fa-solid fa-xmark"></i> Hủy
+              </button>
+            </div>
+          </div>
+        </footer>
+      </section>
+
+      <!-- ==================== PHÂN HỆ 2: DIỄN ĐÀN HỌC SINH (FORUM FEED) ==================== -->
+      <section class="viewport-section" id="view-forum" style="display: none;">
+        <header class="forum-header">
+          <div class="forum-header-top">
+            <div class="forum-brand">
+              <button class="btn-mobile-back" id="btn-back-forum-sidebar" title="Quay lại">
+                <i class="fa-solid fa-arrow-left"></i>
+              </button>
+              <div class="forum-icon-box"><i class="fa-solid fa-newspaper"></i></div>
+              <div>
+                <h2>Diễn Đàn Học Sinh</h2>
+                <p>Cộng đồng hỏi đáp bài tập, trao đổi kinh nghiệm ôn thi và chia sẻ tài liệu</p>
+              </div>
+            </div>
+            <button class="btn-primary-edushare" id="btn-open-forum-chat">
+              <i class="fa-solid fa-comments"></i> Chat Diễn Đàn
+            </button>
+          </div>
+
+          <!-- Thanh tìm kiếm & bộ lọc môn học -->
+          <div class="forum-filter-bar">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="forum-search-input" placeholder="Tìm bài viết, câu hỏi, tài liệu, người đăng...">
+            </div>
+            <div class="subject-chips" id="forum-subject-chips">
+              <button class="chip active" data-subject="all">Tất cả</button>
+              <button class="chip" data-subject="Toán học">Toán học</button>
+              <button class="chip" data-subject="Vật lý">Vật lý</button>
+              <button class="chip" data-subject="Hóa học">Hóa học</button>
+              <button class="chip" data-subject="Sinh học">Sinh học</button>
+              <button class="chip" data-subject="Ngữ văn">Ngữ văn</button>
+              <button class="chip" data-subject="Tiếng Anh">Tiếng Anh</button>
+              <button class="chip" data-subject="Lịch sử">Lịch sử</button>
+              <button class="chip" data-subject="Địa lý">Địa lý</button>
+              <button class="chip" data-subject="Tin học">Tin học</button>
+            </div>
+          </div>
+        </header>
+
+        <div class="forum-scroll-area">
+          <!-- Thông báo khách -->
+          <div class="guest-action-notice" id="forum-guest-notice" style="display: none;">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span>Bạn đang ở chế độ <strong>Khách (chỉ xem)</strong>. Vui lòng đăng nhập để đăng bài viết, tương tác và chia sẻ tài liệu.</span>
+            <button class="btn-primary-small" id="btn-forum-guest-login">Đăng nhập</button>
+          </div>
+
+          <!-- Khung tạo bài viết mới -->
+          <div class="create-post-card" id="forum-create-card">
+            <div class="create-post-input-box">
+              <img src="https://api.dicebear.com/7.x/bottts/svg?seed=GuestVisitor" alt="Avatar" class="avatar-mini" id="create-post-avatar">
+              <textarea id="create-post-text" rows="2" placeholder="Chia sẻ câu hỏi, chuyên đề hoặc đính kèm tài liệu học tập của bạn..."></textarea>
+            </div>
+
+            <!-- Tệp đính kèm xem trước -->
+            <div class="attached-file-preview" id="post-file-preview" style="display: none;">
+              <i class="fa-solid fa-file-pdf"></i>
+              <span id="post-preview-filename">tailieu.pdf</span>
+              <button type="button" class="btn-remove-attachment" id="btn-remove-post-file"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <div class="create-post-footer">
+              <div class="footer-tools">
+                <label for="forum-file-input" class="btn-attach-tool" title="Đính kèm tệp tài liệu">
+                  <i class="fa-solid fa-file-arrow-up"></i>
+                  <span>Đính kèm tệp</span>
+                </label>
+                <input type="file" id="forum-file-input" style="display: none;">
+
+                <select id="forum-post-subject" class="subject-dropdown">
+                  <option value="Chuyên đề chung">Chuyên đề chung</option>
+                  <option value="Toán học">Toán học</option>
+                  <option value="Vật lý">Vật lý</option>
+                  <option value="Hóa học">Hóa học</option>
+                  <option value="Sinh học">Sinh học</option>
+                  <option value="Ngữ văn">Ngữ văn</option>
+                  <option value="Tiếng Anh">Tiếng Anh</option>
+                  <option value="Lịch sử">Lịch sử</option>
+                  <option value="Địa lý">Địa lý</option>
+                  <option value="Tin học">Tin học</option>
+                </select>
+              </div>
+
+              <button class="btn-primary-edushare" id="btn-submit-post">
+                <i class="fa-solid fa-paper-plane"></i> Đăng bài
+              </button>
+            </div>
+          </div>
+
+          <!-- Danh sách bài đăng (Render động) -->
+          <div class="posts-feed-list" id="posts-feed-container">
+            <!-- Render động bằng JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== PHÂN HỆ 3: KHO LƯU TRỮ TÀI LIỆU (VAULT) ==================== -->
+      <section class="viewport-section" id="view-vault" style="display: none;">
+        <header class="vault-header">
+          <div class="vault-header-title">
+            <button class="btn-mobile-back" id="btn-back-vault-sidebar" title="Quay lại">
+              <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div class="vault-icon-box"><i class="fa-solid fa-folder-open"></i></div>
+            <div>
+              <h2>Kho Lưu Trữ Tài Liệu</h2>
+              <p>Tổng hợp đề thi, bài giảng và tài liệu học tập được chia sẻ trên hệ thống</p>
+            </div>
+          </div>
+          <div class="vault-header-status">
+            <span class="vault-status-pill"><i class="fa-solid fa-cloud"></i> Lưu trữ & Đồng bộ đám mây 60 ngày</span>
+          </div>
+        </header>
+
+        <div class="vault-scroll-area">
+          <div class="vault-search-row">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="vault-search-input" placeholder="Tìm tài liệu theo tên file, người gửi, môn học...">
+            </div>
+            <select id="vault-filter-subject" class="subject-dropdown">
+              <option value="all">Tất cả môn học</option>
+              <option value="Toán học">Toán học</option>
+              <option value="Vật lý">Vật lý</option>
+              <option value="Hóa học">Hóa học</option>
+              <option value="Sinh học">Sinh học</option>
+              <option value="Ngữ văn">Ngữ văn</option>
+              <option value="Tiếng Anh">Tiếng Anh</option>
+              <option value="Tin học">Tin học</option>
+            </select>
+          </div>
+
+          <!-- Bộ lọc định dạng file -->
+          <div class="file-type-chips" id="vault-type-chips">
+            <button class="chip active" data-type="all">Tất cả định dạng</button>
+            <button class="chip" data-type="pdf"><i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> PDF</button>
+            <button class="chip" data-type="docx"><i class="fa-solid fa-file-word" style="color:#2563eb;"></i> Word (DOCX)</button>
+            <button class="chip" data-type="xlsx"><i class="fa-solid fa-file-excel" style="color:#10b981;"></i> Excel (XLSX)</button>
+            <button class="chip" data-type="pptx"><i class="fa-solid fa-file-powerpoint" style="color:#f97316;"></i> Slide (PPTX)</button>
+          </div>
+
+          <div class="vault-documents-grid" id="vault-docs-container">
+            <!-- Render danh sách tài liệu bằng JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== PHÂN HỆ 4: DANH BẠ HỌC TẬP (CONTACTS) ==================== -->
+      <section class="viewport-section" id="view-contacts" style="display: none;">
+        <header class="contacts-header">
+          <div class="contacts-header-title">
+            <button class="btn-mobile-back" id="btn-back-contacts-sidebar" title="Quay lại">
+              <i class="fa-solid fa-arrow-left"></i>
+            </button>
+            <div class="contacts-icon-box"><i class="fa-solid fa-address-book"></i></div>
+            <div>
+              <h2>Danh Bạ & Bạn Bè Học Tập</h2>
+              <p>Danh sách bạn học và thành viên trong hệ thống EduShare</p>
+            </div>
+          </div>
+          <button class="btn-primary-edushare" id="btn-contacts-add-friend">
+            <i class="fa-solid fa-user-plus"></i> Thêm bạn mới
+          </button>
+        </header>
+
+        <div class="contacts-scroll-area">
+          <div class="contacts-search-box">
+            <div class="search-box">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="contacts-search-input" placeholder="Tìm bạn theo tên, Gmail hoặc lớp học...">
+            </div>
+          </div>
+          <div class="contacts-grid" id="contacts-list-container">
+            <!-- Render danh sách bạn bè bằng JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== DRAWER PHẢI: THÔNG TIN HỘI THOẠI & QUẢN TRỊ NHÓM ==================== -->
+      <aside class="chat-info-drawer hidden" id="chat-info-drawer">
+
+        <!-- VIEW 1: TRANG CHÍNH THÔNG TIN NHÓM (GOM THÀNH TỪNG ĐỀ MỤC GỌN GÀNG CHUẨN EDUSHARE PC) -->
+        <div class="drawer-view" id="drawer-view-main">
+          <div class="drawer-header">
+            <h3 id="drawer-main-title">Thông tin hội thoại</h3>
+            <button class="btn-close-drawer" id="btn-close-drawer"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+
+          <div class="drawer-body">
+            <div class="drawer-hero-profile">
+              <div class="hero-avatar" id="drawer-hero-avatar">
+                <i class="fa-solid fa-users"></i>
+              </div>
+              <div class="drawer-hero-name-row">
+                <h4 id="drawer-group-name">Diễn Đàn Học Sinh</h4>
+                <button class="btn-drawer-edit-name" id="btn-drawer-rename-group" title="Đổi tên nhóm" style="display:none;"><i class="fa-solid fa-pen"></i></button>
+              </div>
+              <span class="role-badge" id="drawer-group-type">Cộng đồng chính thức</span>
+            </div>
+
+            <!-- Mã truy cập nhóm (16 ký tự an toàn) đặt gọn gàng trong thông tin hội thoại -->
+            <div class="access-code-box" id="drawer-code-section" style="margin: 8px 14px 4px;">
+              <div class="code-info-col">
+                <span class="code-label"><i class="fa-solid fa-key"></i> Mã truy cập nhóm (16 ký tự):</span>
+                <strong class="code-value" id="drawer-access-code">...</strong>
+              </div>
+              <button type="button" class="btn-copy-code" id="btn-copy-drawer-code" title="Bấm để sao chép mã">
+                <i class="fa-solid fa-copy"></i>
+              </button>
+            </div>
+
+            <!-- 4 Nút chức năng tròn chuẩn phong cách EduShare PC -->
+            <div class="drawer-quick-actions">
+              <button type="button" class="drawer-quick-btn" id="btn-drawer-toggle-mute" title="Tắt / Bật thông báo">
+                <div class="drawer-quick-icon"><i class="fa-solid fa-bell-slash" id="icon-drawer-mute"></i></div>
+                <span class="drawer-quick-label" id="label-drawer-mute">Tắt thông báo</span>
+              </button>
+              <button type="button" class="drawer-quick-btn" id="btn-drawer-toggle-pin" title="Ghim / Bỏ ghim hội thoại">
+                <div class="drawer-quick-icon"><i class="fa-solid fa-thumbtack" id="icon-drawer-pin"></i></div>
+                <span class="drawer-quick-label" id="label-drawer-pin">Ghim hội thoại</span>
+              </button>
+              <button type="button" class="drawer-quick-btn" id="btn-drawer-add-member" title="Thêm thành viên">
+                <div class="drawer-quick-icon"><i class="fa-solid fa-user-plus"></i></div>
+                <span class="drawer-quick-label">Thêm t.viên</span>
+              </button>
+              <button type="button" class="drawer-quick-btn" id="btn-drawer-group-settings" title="Cài đặt & Quản lý nhóm">
+                <div class="drawer-quick-icon"><i class="fa-solid fa-gear"></i></div>
+                <span class="drawer-quick-label">Quản lý nhóm</span>
+              </button>
+            </div>
+
+            <!-- ĐỀ MỤC 1: THÀNH VIÊN NHÓM (Chuẩn EduShare PC: chỉ hiện dòng [icon] X thành viên, click vào mục riêng mới hiện đầy đủ) -->
+            <div class="drawer-card-section" id="drawer-members-section">
+              <div class="drawer-section-header">
+                <span>Thành viên nhóm</span>
+                <i class="fa-solid fa-chevron-down chevron"></i>
+              </div>
+              <div class="drawer-entry-row" id="btn-drawer-open-members" title="Bấm để xem danh sách thành viên đầy đủ">
+                <div class="drawer-entry-left">
+                  <i class="fa-solid fa-users"></i>
+                  <span><strong id="drawer-members-count">0</strong> thành viên</span>
+                </div>
+                <i class="fa-solid fa-chevron-right arrow-right"></i>
+              </div>
+            </div>
+
+            <!-- ĐỀ MỤC 2: BẢNG TIN NHÓM (EduShare PC style) -->
+            <div class="drawer-card-section" id="drawer-board-section">
+              <div class="drawer-section-header">
+                <span>Bảng tin nhóm</span>
+                <i class="fa-solid fa-chevron-down chevron"></i>
+              </div>
+              <div class="drawer-section-content" id="drawer-board-content">
+                <div class="drawer-board-item" id="drawer-item-schedule" style="cursor:pointer;">
+                  <i class="fa-regular fa-clock"></i>
+                  <span>Danh sách nhắc hẹn & lịch thi</span>
+                </div>
+                <div class="drawer-board-item" id="drawer-item-notes" style="cursor:pointer; margin-top:8px;">
+                  <i class="fa-regular fa-note-sticky"></i>
+                  <span>Ghi chú, ghim, bài viết</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ĐỀ MỤC 3: ẢNH/VIDEO (Grid 8 ảnh preview, ấn Xem tất cả để mở mục riêng đầy đủ) -->
+            <div class="drawer-card-section" id="drawer-media-section">
+              <div class="drawer-section-header">
+                <span>Ảnh/Video</span>
+                <i class="fa-solid fa-chevron-down chevron"></i>
+              </div>
+              <div class="drawer-section-content" id="drawer-media-content">
+                <div class="drawer-media-grid" id="drawer-media-grid">
+                  <!-- Render động 8 ảnh preview -->
+                </div>
+                <button type="button" class="btn-drawer-view-all" id="btn-drawer-view-all-media">Xem tất cả</button>
+              </div>
+            </div>
+
+            <!-- ĐỀ MỤC 4: FILE TÀI LIỆU (Tối đa 3 file preview, ấn Xem tất cả để mở mục riêng đầy đủ) -->
+            <div class="drawer-card-section" id="drawer-files-section">
+              <div class="drawer-section-header">
+                <span>File</span>
+                <i class="fa-solid fa-chevron-down chevron"></i>
+              </div>
+              <div class="drawer-section-content" id="drawer-files-content">
+                <div class="drawer-files-list" id="drawer-files-list">
+                  <!-- Render động 3 file preview chuẩn EduShare PC -->
+                </div>
+                <button type="button" class="btn-drawer-view-all" id="btn-drawer-view-all-files">Xem tất cả</button>
+              </div>
+            </div>
+
+            <!-- ĐỀ MỤC 5: LINK LIÊN KẾT (Tối đa 3 link preview, ấn Xem tất cả để mở mục riêng đầy đủ) -->
+            <div class="drawer-card-section" id="drawer-links-section">
+              <div class="drawer-section-header">
+                <span>Link</span>
+                <i class="fa-solid fa-chevron-down chevron"></i>
+              </div>
+              <div class="drawer-section-content" id="drawer-links-content">
+                <div class="drawer-links-list" id="drawer-links-list">
+                  <!-- Render động 3 link preview -->
+                </div>
+                <button type="button" class="btn-drawer-view-all" id="btn-drawer-view-all-links">Xem tất cả</button>
+              </div>
+            </div>
+
+
+
+            <!-- Cài đặt quản trị nhóm (Chỉ hiển thị cho Trưởng nhóm) -->
+            <div class="drawer-section admin-settings" id="drawer-admin-section" style="display: none;">
+              <div class="section-title"><i class="fa-solid fa-shield-halved"></i> Cài Đặt Nhóm (Trưởng nhóm)</div>
+
+              <div class="toggle-setting-row">
+                <div>
+                  <strong>Chỉ Trưởng, Phó nhóm được gửi tin & tệp</strong>
+                  <p>Khóa quyền gửi bài của thành viên thông thường</p>
+                </div>
+                <label class="switch-ui">
+                  <input type="checkbox" id="toggle-admin-only-chat">
+                  <span class="slider-round"></span>
+                </label>
+              </div>
+
+              <div class="toggle-setting-row" style="margin-top: 12px;">
+                <div>
+                  <strong>Yêu cầu phê duyệt thành viên</strong>
+                  <p>Phải có sự đồng ý của Trưởng/Phó nhóm để gia nhập</p>
+                </div>
+                <label class="switch-ui">
+                  <input type="checkbox" id="toggle-require-approval">
+                  <span class="slider-round"></span>
+                </label>
+              </div>
+
+              <!-- VÙNG NGUY HIỂM: XÓA NHÓM VĨNH VIỄN (CHỈ TRƯỞNG NHÓM MỚI THẤY VÀ THỰC HIỆN) -->
+              <div class="admin-danger-zone" id="box-admin-delete-room" style="margin-top: 16px; padding-top: 12px; border-top: 1px dashed #fca5a5; display: none;">
+                <div style="font-size: 12px; font-weight: 700; color: #dc2626; margin-bottom: 6px;">
+                  <i class="fa-solid fa-triangle-exclamation"></i> Vùng Nguy Hiểm (Chỉ Trưởng Nhóm)
+                </div>
+                <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; line-height: 1.4;">
+                  Xóa toàn bộ nhóm, dọn sạch dữ liệu tin nhắn, tài liệu trên Server và Google Drive.
+                </p>
+                <button type="button" class="btn-danger-solid btn-block" id="btn-delete-group-forever" style="width: 100%; justify-content: center;">
+                  <i class="fa-solid fa-trash-can"></i> Xóa Nhóm Vĩnh Viễn
+                </button>
+              </div>
+            </div>
+
+            <!-- Yêu cầu gia nhập đang chờ duyệt (nếu có) -->
+            <div class="drawer-section" id="drawer-pending-section" style="display: none;">
+              <div class="section-title text-warning"><i class="fa-solid fa-user-clock"></i> Chờ phê duyệt (<span id="drawer-pending-count">0</span>)</div>
+              <div class="drawer-pending-list" id="drawer-pending-list">
+                <!-- Render yêu cầu chờ duyệt bằng JS -->
+              </div>
+            </div>
+
+            <!-- Nút chức năng chân drawer (Rời nhóm, Chặn, Xóa đoạn chat) -->
+            <div class="drawer-footer-actions" id="drawer-footer-actions">
+              <!-- Nút cho nhóm học tập (Thành viên/Phó nhóm rời nhóm) -->
+              <div id="drawer-group-actions-box">
+                <button class="btn-danger-outline" id="btn-leave-group">
+                  <i class="fa-solid fa-arrow-right-from-bracket"></i> Rời nhóm học tập
+                </button>
+              </div>
+
+              <!-- Nút cho cuộc trò chuyện 1-1 (Direct Chat) -->
+              <div id="drawer-direct-actions-box" style="display: none;">
+                <button type="button" class="btn-primary-edushare" id="btn-drawer-create-group-direct" style="width: 100%; margin-bottom: 8px;">
+                  <i class="fa-solid fa-users-medical"></i> <span id="label-drawer-create-group-direct">Tạo nhóm trò chuyện</span>
+                </button>
+                <button type="button" class="btn-danger-outline" id="btn-drawer-block-user">
+                  <i class="fa-solid fa-ban"></i> <span id="label-drawer-block">Chặn trò chuyện</span>
+                </button>
+                <button type="button" class="btn-danger-solid" id="btn-drawer-clear-chat" style="margin-top: 8px;">
+                  <i class="fa-solid fa-trash-can"></i> Xóa đoạn chat
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIEW 2: MỤC RIÊNG HIỂN THỊ ĐẦY ĐỦ (DEDICATED FULL VIEW KHI BẤM VÀO TỪNG ĐỀ MỤC) -->
+        <div class="drawer-view" id="drawer-view-detail" style="display: none;">
+          <div class="drawer-header drawer-detail-header">
+            <button type="button" class="btn-drawer-back" id="btn-drawer-back-to-main" title="Quay lại danh mục">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <h3 id="drawer-detail-title">Danh sách chi tiết</h3>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <button type="button" class="btn-header-tool" id="btn-drawer-expand-modal" title="Mở trong cửa sổ lớn">
+                <i class="fa-solid fa-expand"></i>
+              </button>
+              <button class="btn-close-drawer" id="btn-close-drawer-detail"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+          </div>
+
+          <!-- Thanh tìm kiếm nhanh trong mục riêng -->
+          <div class="drawer-detail-search-bar">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="input-drawer-detail-search" placeholder="Tìm kiếm nhanh...">
+          </div>
+
+          <!-- Thùng chứa hiển thị danh sách đầy đủ -->
+          <div class="drawer-body drawer-detail-body" id="drawer-detail-body">
+            <!-- Render động danh sách đầy đủ: Thành viên / Ảnh-Video / File / Link -->
+          </div>
+        </div>
+
+      </aside>
+
+    </main>
+  </div>
+
+  <!-- ==================== CÁC MODAL HỆ THỐNG CHUẨN ==================== -->
+
+  <!-- 0. MODAL: KHO LƯU TRỮ & THÀNH VIÊN NHÓM ĐẦY ĐỦ (CỬA SỔ LỚN CHUẨN EDUSHARE PC) -->
+  <div class="modal-backdrop" id="modal-storage-repository">
+    <div class="modal-card modal-repository-card">
+      <div class="modal-card-header">
+        <div class="modal-title-with-icon">
+          <i class="fa-solid fa-folder-open text-primary"></i>
+          <h3 id="repo-modal-title">Kho Lưu Trữ & Thành Viên Nhóm</h3>
+        </div>
+        <button class="btn-close-modal" data-close="modal-storage-repository"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Tab điều hướng 4 mục: Thành viên / Ảnh-Video / File / Link -->
+      <div class="repo-tab-nav">
+        <button type="button" class="repo-tab-btn active" data-repo-tab="members"><i class="fa-solid fa-users"></i> Thành viên (<span id="modal-count-members">0</span>)</button>
+        <button type="button" class="repo-tab-btn" data-repo-tab="media"><i class="fa-solid fa-images"></i> Ảnh/Video (<span id="modal-count-media">0</span>)</button>
+        <button type="button" class="repo-tab-btn" data-repo-tab="files"><i class="fa-solid fa-folder-open"></i> File (<span id="modal-count-files">0</span>)</button>
+        <button type="button" class="repo-tab-btn" data-repo-tab="links"><i class="fa-solid fa-link"></i> Link (<span id="modal-count-links">0</span>)</button>
+      </div>
+
+      <div class="repo-modal-search-bar">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input type="text" id="input-repo-modal-search" placeholder="Tìm kiếm tài liệu, thành viên hoặc liên kết...">
+      </div>
+
+      <div class="modal-card-body repo-modal-body" id="repo-modal-body">
+        <!-- Render nội dung tương ứng theo Tab -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 1. MODAL XÁC THỰC TÀI KHOẢN (ĐĂNG NHẬP / ĐĂNG KÝ / QUÊN MK) -->
+  <div class="modal-backdrop" id="modal-auth">
+    <div class="modal-card modal-auth-card">
+      <div class="modal-card-header">
+        <div class="auth-header-title">
+          <i class="fa-solid fa-shield-halved text-primary"></i>
+          <h3>Tài Khoản EduShare</h3>
+        </div>
+        <button class="btn-close-modal" data-close="modal-auth"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="auth-tab-nav">
+        <button class="auth-nav-btn active" data-auth-tab="login"><i class="fa-solid fa-right-to-bracket"></i> Đăng Nhập</button>
+        <button class="auth-nav-btn" data-auth-tab="register"><i class="fa-solid fa-user-plus"></i> Đăng Ký</button>
+        <button class="auth-nav-btn" data-auth-tab="forgot"><i class="fa-solid fa-key"></i> Quên MK</button>
+      </div>
+
+      <div class="modal-card-body">
+
+        <!-- PANEL 1: ĐĂNG NHẬP -->
+        <div class="auth-tab-panel active" id="auth-panel-login">
+          <div class="auth-notice-card">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>Đăng nhập để tham gia nhóm học tập, thảo luận diễn đàn và chia sẻ bài học.</span>
+          </div>
+
+          <form id="form-login">
+            <div class="form-group">
+              <label>Địa chỉ Gmail: <span class="required">*</span></label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-envelope"></i>
+                <input type="email" id="input-login-email" placeholder="example@gmail.com" required autocomplete="email">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Mật khẩu: <span class="required">*</span></label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="input-login-password" placeholder="Nhập mật khẩu..." required autocomplete="current-password">
+                <button type="button" class="btn-toggle-password" data-target="input-login-password" title="Hiện/Ẩn mật khẩu"><i class="fa-solid fa-eye"></i></button>
+              </div>
+            </div>
+
+            <div class="form-row-actions">
+              <label class="checkbox-label">
+                <input type="checkbox" id="check-remember-login" checked> Ghi nhớ đăng nhập
+              </label>
+              <button type="button" class="btn-link" id="link-go-to-forgot">Quên mật khẩu?</button>
+            </div>
+
+            <button type="submit" class="btn-primary-edushare btn-block" id="btn-submit-login">
+              <i class="fa-solid fa-arrow-right-to-bracket"></i> Đăng Nhập Ngay
+            </button>
+          </form>
+        </div>
+
+        <!-- PANEL 2: ĐĂNG KÝ (XÁC MINH MÃ OTP GMAIL HIỆU LỰC 10 PHÚT) -->
+        <div class="auth-tab-panel" id="auth-panel-register">
+          <div class="auth-notice-card">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>Mã OTP xác thực sẽ được gửi trực tiếp đến hộp thư Gmail của bạn (hiệu lực trong <strong>10 phút</strong>).</span>
+          </div>
+
+          <form id="form-register">
+            <div class="form-group">
+              <label>Họ và tên hiển thị: <span class="required">*</span></label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-user"></i>
+                <input type="text" id="reg-name" placeholder="Ví dụ: Nguyễn Văn An..." required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Địa chỉ Gmail nhận mã OTP: <span class="required">*</span></label>
+              <div class="input-group-with-btn">
+                <div class="input-with-icon" style="flex: 1;">
+                  <i class="fa-solid fa-envelope"></i>
+                  <input type="email" id="reg-email" placeholder="example@gmail.com" required autocomplete="email">
+                </div>
+                <button type="button" class="btn-otp-send" id="btn-send-reg-otp" title="Gửi mã OTP về Gmail">
+                  <i class="fa-solid fa-paper-plane"></i> Gửi mã OTP
+                </button>
+              </div>
+              <div class="auth-spam-notice">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span><strong>Chú ý:</strong> Mã OTP có thể được gửi vào hòm thư rác (Spam/Junk), vui lòng kiểm tra kỹ!</span>
+              </div>
+              <small class="form-help-text" id="reg-otp-status-text">Bấm nút "Gửi mã OTP" để nhận mã 6 chữ số vào hộp thư Gmail.</small>
+            </div>
+
+            <div class="form-group">
+              <label>Nhập mã xác minh OTP (6 chữ số): <span class="required">*</span></label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-key"></i>
+                <input type="text" id="reg-otp" maxlength="6" placeholder="Nhập 6 chữ số trong Gmail..." required autocomplete="one-time-code">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Thông tin lớp / Chức vụ:</label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <input type="text" id="reg-subinfo" placeholder="Ví dụ: Học sinh Lớp 12A1...">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Tạo mật khẩu: <span class="required">*</span></label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="reg-password" placeholder="Nhập mật khẩu mới..." required autocomplete="new-password">
+                <button type="button" class="btn-toggle-password" data-target="reg-password" title="Hiện/Ẩn mật khẩu"><i class="fa-solid fa-eye"></i></button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary-edushare btn-block" id="btn-submit-register">
+              <i class="fa-solid fa-user-check"></i> Xác Nhận Đăng Ký
+            </button>
+          </form>
+        </div>
+
+        <!-- PANEL 3: QUÊN MẬT KHẨU (XÁC MINH MÃ OTP GMAIL HIỆU LỰC 10 PHÚT) -->
+        <div class="auth-tab-panel" id="auth-panel-forgot">
+          <div class="auth-notice-card">
+            <i class="fa-solid fa-key"></i>
+            <span>Nhập Gmail của bạn để nhận mã OTP khôi phục mật khẩu (hiệu lực trong <strong>10 phút</strong>).</span>
+          </div>
+
+          <form id="form-forgot">
+            <div class="form-group">
+              <label>Địa chỉ Gmail tài khoản: <span class="required">*</span></label>
+              <div class="input-group-with-btn">
+                <div class="input-with-icon" style="flex: 1;">
+                  <i class="fa-solid fa-envelope"></i>
+                  <input type="email" id="forgot-email" placeholder="example@gmail.com" required autocomplete="email">
+                </div>
+                <button type="button" class="btn-otp-send" id="btn-send-forgot-otp" title="Gửi mã OTP về Gmail">
+                  <i class="fa-solid fa-paper-plane"></i> Gửi OTP
+                </button>
+              </div>
+              <div class="auth-spam-notice">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span><strong>Chú ý:</strong> Mã OTP có thể được gửi vào hòm thư rác (Spam/Junk), vui lòng kiểm tra kỹ!</span>
+              </div>
+              <small class="form-help-text" id="forgot-otp-status-text">Hệ thống sẽ gửi mã đến Gmail nếu tài khoản tồn tại.</small>
+            </div>
+
+            <div class="form-group">
+              <label>Nhập mã xác minh OTP (6 chữ số): <span class="required">*</span></label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-key"></i>
+                <input type="text" id="forgot-otp" maxlength="6" placeholder="Nhập mã 6 chữ số..." required autocomplete="one-time-code">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Mật khẩu mới: <span class="required">*</span></label>
+              <div class="input-with-icon">
+                <i class="fa-solid fa-lock"></i>
+                <input type="password" id="forgot-new-pass" placeholder="Nhập mật khẩu mới..." required autocomplete="new-password">
+                <button type="button" class="btn-toggle-password" data-target="forgot-new-pass" title="Hiện/Ẩn mật khẩu"><i class="fa-solid fa-eye"></i></button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn-primary-edushare btn-block" id="btn-submit-forgot">
+              <i class="fa-solid fa-check"></i> Đặt Lại Mật Khẩu
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. MODAL TẠO NHÓM MỚI (MÃ NGẪU NHIÊN 16 KÝ TỰ) -->
+  <div class="modal-backdrop" id="modal-create-group">
+    <div class="modal-card">
+      <div class="modal-card-header">
+        <h3><i class="fa-solid fa-users-medical text-primary"></i> Tạo Nhóm Học Tập Mới</h3>
+        <button class="btn-close-modal" data-close="modal-create-group"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-card-body">
+        <form id="form-create-group">
+          <div class="form-group" id="create-group-initial-member-row" style="display: none;">
+            <label>Thành viên tham gia cùng:</label>
+            <div id="create-group-initial-member-badge" class="initial-member-badge" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-hover); border-radius: 8px; border: 1px solid var(--border-color);">
+              <img id="create-group-initial-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Friend" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover;">
+              <span id="create-group-initial-name" style="font-size: 13px; font-weight: 600; color: var(--text-color);">Bạn bè</span>
+              <span id="create-group-initial-email" style="font-size: 11.5px; color: var(--text-muted);">(email)</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Tên nhóm học tập: <span class="required">*</span></label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-users"></i>
+              <input type="text" id="new-group-name" placeholder="Ví dụ: Nhóm Ôn Thi Toán 12..." required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Môn học / Chủ đề: <span class="required">*</span></label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-book-open"></i>
+              <select id="new-group-subject" class="subject-dropdown" style="flex: 1; border: none; background: transparent;">
+                <option value="Toán học">Toán học</option>
+                <option value="Vật lý">Vật lý</option>
+                <option value="Hóa học">Hóa học</option>
+                <option value="Sinh học">Sinh học</option>
+                <option value="Ngữ văn">Ngữ văn</option>
+                <option value="Tiếng Anh">Tiếng Anh</option>
+                <option value="Lịch sử">Lịch sử</option>
+                <option value="Địa lý">Địa lý</option>
+                <option value="Tin học">Tin học</option>
+                <option value="Chuyên đề chung">Chuyên đề chung</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Mã truy cập nhóm (Tự động sinh ngẫu nhiên 16 ký tự an toàn):</label>
+            <div class="input-group-action">
+              <div class="input-with-icon" style="flex: 1;">
+                <i class="fa-solid fa-key"></i>
+                <input type="text" id="new-group-code" readonly style="font-family: monospace; letter-spacing: 1px; font-weight: 700; color: var(--accent-primary);">
+              </div>
+              <button type="button" class="btn-action-accent" id="btn-regen-code" title="Tạo mã mới">
+                <i class="fa-solid fa-arrows-rotate"></i> Sinh mã mới
+              </button>
+            </div>
+            <small class="helper-text">Mã 16 ký tự bảo mật dùng để mời bạn bè tham gia nhóm.</small>
+          </div>
+
+          <button type="submit" class="btn-primary-edushare btn-block">
+            <i class="fa-solid fa-plus"></i> Hoàn Tất Tạo Nhóm
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. MODAL THAM GIA BẰNG MÃ 16 KÝ TỰ -->
+  <div class="modal-backdrop" id="modal-join-group">
+    <div class="modal-card">
+      <div class="modal-card-header">
+        <h3><i class="fa-solid fa-key text-primary"></i> Tham Gia Nhóm Học Tập</h3>
+        <button class="btn-close-modal" data-close="modal-join-group"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-card-body">
+        <form id="form-join-group">
+          <div class="form-group">
+            <label>Nhập mã truy cập nhóm (16 ký tự): <span class="required">*</span></label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-key"></i>
+              <input type="text" id="input-join-code" maxlength="32" placeholder="Ví dụ: TOAN12THPTQG2026..." required style="font-family: monospace; font-weight: 700;">
+            </div>
+            <small class="helper-text">Nhập mã 16 ký tự do Trưởng nhóm hoặc Phó nhóm cung cấp.</small>
+          </div>
+
+          <button type="submit" class="btn-primary-edushare btn-block">
+            <i class="fa-solid fa-right-to-bracket"></i> Tham Gia Nhóm
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. MODAL CHIA SẺ BÀI VIẾT (VÀO NHÓM HOẶC BẠN BÈ) -->
+  <div class="modal-backdrop" id="modal-share-post">
+    <div class="modal-card">
+      <div class="modal-card-header">
+        <h3><i class="fa-solid fa-share-nodes text-primary"></i> Chia Sẻ Bài Viết Diễn Đàn</h3>
+        <button class="btn-close-modal" data-close="modal-share-post"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-card-body">
+        <div class="share-preview-box" id="share-preview-snippet">
+          <strong id="share-preview-author">Tác giả</strong>
+          <p id="share-preview-text">Nội dung tóm tắt...</p>
+        </div>
+
+        <div class="form-group" style="margin-top: 15px;">
+          <label>Chọn nhóm học tập để chia sẻ:</label>
+          <div class="share-dest-list" id="share-dest-list">
+            <!-- Render danh sách nhóm bằng JS -->
+          </div>
+        </div>
+
+        <div class="modal-actions-row">
+          <button type="button" class="btn-action-accent" id="btn-copy-post-link">
+            <i class="fa-solid fa-link"></i> Sao chép trích dẫn
+          </button>
+          <button type="button" class="btn-primary-edushare" id="btn-confirm-share-post">
+            <i class="fa-solid fa-paper-plane"></i> Gửi vào nhóm
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. MODAL HỒ SƠ CÁ NHÂN & ĐỔI AVATAR (ĐỒNG BỘ TOÀN HỆ THỐNG) -->
+  <div class="modal-backdrop" id="modal-profile">
+    <div class="modal-card">
+      <div class="modal-card-header">
+        <h3><i class="fa-solid fa-user-pen text-primary"></i> Hồ Sơ Cá Nhân & Ảnh Đại Diện</h3>
+        <button class="btn-close-modal" data-close="modal-profile"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-card-body">
+        <form id="form-edit-profile">
+          <div class="profile-avatar-center">
+            <div class="avatar-large-wrap">
+              <img src="https://api.dicebear.com/7.x/bottts/svg?seed=GuestVisitor" alt="Avatar" class="avatar-large" id="profile-edit-avatar-preview">
+              <label for="profile-avatar-upload" class="avatar-edit-overlay-btn" title="Đổi ảnh đại diện">
+                <i class="fa-solid fa-camera"></i>
+              </label>
+            </div>
+            <span class="avatar-sync-note">Ảnh đại diện mới sẽ tự động đồng bộ trên toàn bộ tin nhắn, bài viết và bình luận cũ trên hệ thống EduShare.</span>
+          </div>
+
+          <div class="form-group">
+            <label>Họ và tên hiển thị: <span class="required">*</span></label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-user"></i>
+              <input type="text" id="profile-edit-name" placeholder="Nhập họ và tên hiển thị..." required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Thông tin lớp / Chức vụ:</label>
+            <div class="input-with-icon">
+              <i class="fa-solid fa-graduation-cap"></i>
+              <input type="text" id="profile-edit-subinfo" placeholder="Ví dụ: Học sinh Lớp 12A1...">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Chọn nhanh ảnh đại diện mẫu:</label>
+            <div class="avatar-preset-wrapper">
+              <div class="avatar-preset-grid" id="avatar-preset-grid">
+                <!-- Render các avatar mẫu -->
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Hoặc tải ảnh từ máy tính / điện thoại:</label>
+            <div class="custom-file-upload-wrap">
+              <label for="profile-avatar-upload" class="custom-file-upload-label">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span id="profile-upload-status-text">Chọn ảnh từ thiết bị (JPG, PNG, WebP)...</span>
+              </label>
+              <input type="file" id="profile-avatar-upload" accept="image/*" style="display: none;">
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary-edushare btn-block">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu Thay Đổi & Đồng Bộ
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. MODAL CÀI ĐẶT GOOGLE DRIVE -->
+  <div class="modal-backdrop" id="modal-drive-config">
+    <div class="modal-card">
+      <div class="modal-card-header">
+        <h3><i class="fa-brands fa-google-drive text-primary"></i> Cài Đặt Thư Mục Google Drive</h3>
+        <button class="btn-close-modal" data-close="modal-drive-config"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-card-body">
+        <form id="form-drive-config">
+          <div class="auth-notice-card" style="margin-bottom: 16px;">
+            <i class="fa-solid fa-cloud-arrow-up text-primary" style="font-size: 20px;"></i>
+            <span style="font-size: 13px;">Hệ thống tự động đồng bộ tệp lên đám mây (drive.vn-ai.cloud thư mục edushare) và tự động xóa sau 60 ngày hoặc khi bạn chọn xóa tin nhắn/nhóm.</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label style="font-weight: 600; font-size: 13px; color: var(--text-color); display: flex; justify-content: space-between; align-items: center;">
+              <span><i class="fa-solid fa-link text-primary"></i> URL Web App Đồng Bộ (Google Apps Script):</span>
+              <span id="drive-conn-badge" class="badge-role" style="background: #f1f5f9; color: var(--text-muted); font-size: 11px;">Chưa kết nối</span>
+            </label>
+            <div class="input-with-icon" style="margin-bottom: 6px;">
+              <i class="fa-solid fa-bolt"></i>
+              <input type="url" id="input-drive-webapp-url" placeholder="https://script.google.com/macros/s/.../exec">
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button type="button" class="btn-primary-small" id="btn-test-drive-conn" style="background: #0284c7; color: #fff;">
+                <i class="fa-solid fa-plug"></i> Kiểm Tra Kết Nối
+              </button>
+              <button type="button" class="btn-primary-small" id="btn-purge-local-cache" style="background: #ea580c; color: #fff;" title="Xóa các tệp tạm trên ổ cứng sau khi đã lên Drive">
+                <i class="fa-solid fa-hard-drive"></i> Giải Phóng Ổ Cứng
+              </button>
+              <button type="button" class="btn-primary-small" id="btn-trigger-clean-30d" style="background: #64748b; color: #fff;" title="Quét và dọn dẹp các tệp quá hạn 60 ngày">
+                <i class="fa-solid fa-broom"></i> Dọn Tệp Cũ 60 Ngày
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label style="font-weight: 600; font-size: 13px; color: var(--text-color);">
+              <i class="fa-brands fa-google-drive text-primary"></i> Liên kết Thư mục Google Drive (Xem trực tuyến):
+            </label>
+            <div class="input-with-icon" style="margin-bottom: 6px;">
+              <i class="fa-brands fa-google-drive"></i>
+              <input type="url" id="input-drive-folder-url" value="https://drive.google.com/drive/folders/1jfeInxopW2mbPNpVkjsc-nAhZfyPZr7e?usp=sharing" placeholder="https://drive.google.com/...">
+            </div>
+            <a href="https://drive.google.com/drive/folders/1jfeInxopW2mbPNpVkjsc-nAhZfyPZr7e?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn-primary-small" id="btn-open-drive-folder" style="display: inline-flex; align-items: center; gap: 6px; text-decoration: none; background: #10b981; color: #fff;">
+              <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở Thư Mục Trên Google Drive
+            </a>
+          </div>
+
+          <div style="background: var(--bg-hover); padding: 10px 12px; border-radius: 6px; font-size: 12px; color: var(--text-muted); margin-bottom: 16px; border-left: 3px solid var(--primary);">
+            <strong>Hướng dẫn triển khai nhanh (2 phút):</strong>
+            <ol style="margin: 4px 0 0 16px; padding: 0;">
+              <li>Mở <code>script.google.com</code>, dán toàn bộ mã file <code>google-drive-sync.gs</code>.</li>
+              <li>Bấm <strong>Triển khai</strong> &gt; <strong>Tùy chọn triển khai mới</strong> &gt; Ứng dụng web &gt; Ai có quyền truy cập: <em>Bất kỳ ai</em>.</li>
+              <li>Sao chép link Web App dán vào ô trên và bấm <strong>Lưu Cấu Hình</strong>.</li>
+            </ol>
+          </div>
+
+          <button type="submit" class="btn-primary-edushare btn-block">
+            <i class="fa-solid fa-check"></i> Lưu Cấu Hình & Kích Hoạt Đồng Bộ
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. MODAL CHỌN THEME MÀU (3 THEME) -->
+  <div class="modal-backdrop" id="modal-theme-chooser">
+    <div class="modal-card">
+      <div class="modal-card-header">
+        <h3><i class="fa-solid fa-palette text-primary"></i> Tùy Chọn Giao Diện Thiết Bị</h3>
+        <button class="btn-close-modal" data-close="modal-theme-chooser"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-card-body">
+        <div class="theme-options-grid">
+          <button type="button" class="theme-card active" data-theme="theme-light">
+            <div class="theme-preview light">
+              <span class="preview-bar"></span>
+              <span class="preview-bubble"></span>
+            </div>
+            <strong>Giao diện Sáng (EduShare Blue)</strong>
+            <small>Sáng sủa, thanh lịch, dễ nhìn ban ngày</small>
+          </button>
+
+          <button type="button" class="theme-card" data-theme="theme-dark">
+            <div class="theme-preview dark">
+              <span class="preview-bar"></span>
+              <span class="preview-bubble"></span>
+            </div>
+            <strong>Giao diện Tối (Dark Mode)</strong>
+            <small>Dịu mắt ban đêm, tiết kiệm pin thiết bị</small>
+          </button>
+
+          <button type="button" class="theme-card" data-theme="theme-chalkboard">
+            <div class="theme-preview chalkboard">
+              <span class="preview-bar"></span>
+              <span class="preview-bubble"></span>
+            </div>
+            <strong>Xanh Bảng Phấn (Chalkboard)</strong>
+            <small>Màu xanh bảng lớp học, ấm áp và thân thiện</small>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. MODAL THÊM BẠN MỚI (SEARCH & MESSAGE) -->
+  <div class="modal-backdrop" id="modal-add-friend">
+    <div class="modal-card">
+      <div class="modal-card-header">
+        <h3><i class="fa-solid fa-user-plus text-primary"></i> Thêm Bạn Bè Học Tập</h3>
+        <button class="btn-close-modal" data-close="modal-add-friend"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-card-body">
+        <div class="search-box" style="margin-bottom: 16px;">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="input-search-new-friend" placeholder="Nhập Gmail hoặc tên bạn bè để tìm kiếm...">
+        </div>
+        <div class="add-friend-results" id="add-friend-results-container">
+          <!-- Render danh sách bạn bè bằng JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. MODAL XEM TRƯỚC TÀI LIỆU / HÌNH ẢNH (LIGHTBOX) -->
+  <div class="modal-backdrop" id="modal-image-preview">
+    <div class="modal-card modal-preview-card">
+      <div class="modal-card-header">
+        <h3 id="preview-modal-title"><i class="fa-regular fa-file-lines text-primary"></i> Xem Trước Tệp</h3>
+        <button class="btn-close-modal" data-close="modal-image-preview"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-card-body preview-modal-body">
+        <div id="preview-modal-content" class="preview-container">
+          <!-- Render nội dung xem trước -->
+        </div>
+      </div>
+      <div class="modal-card-footer-preview">
+        <span id="preview-file-size" style="font-size: 12px; color: var(--text-muted);">Dung lượng: 1.5 MB</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <button type="button" class="btn-doc-download" id="btn-preview-share-action" title="Chia sẻ tệp này" style="padding: 6px 12px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; font-weight: 500;">
+            <i class="fa-solid fa-share"></i> Chia sẻ
+          </button>
+          <button type="button" class="btn-primary-edushare" id="btn-preview-download-action">
+            <i class="fa-solid fa-download"></i> Tải Về Máy
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 10. MODAL XEM HỒ SƠ & QUAN HỆ BẠN BÈ (PROFILE & FRIEND ACTIONS) -->
+  <div class="modal-backdrop" id="modal-user-profile-view">
+    <div class="modal-card" style="max-width: 440px;">
+      <div class="modal-card-header">
+        <h3><i class="fa-solid fa-id-card text-primary"></i> Thông Tin Người Dùng</h3>
+        <button class="btn-close-modal" data-close="modal-user-profile-view"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-card-body" style="text-align: center; padding: 24px 20px;">
+        <img src="" alt="Avatar" id="upv-avatar" style="width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--primary); margin: 0 auto 12px auto; display: block; object-fit: cover;">
+        <h3 id="upv-name" style="margin: 0 0 4px 0; font-size: 18px; font-weight: 700; color: var(--text-color);">...</h3>
+        <div id="upv-role-title" style="font-size: 13px; color: var(--primary); font-weight: 600; margin-bottom: 4px;">...</div>
+        <div id="upv-email" style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">...</div>
+        <div id="upv-sub-info" style="font-size: 12px; color: var(--text-muted); margin-bottom: 18px; font-style: italic;">...</div>
+
+        <!-- Khung trạng thái quan hệ và các nút hành động kết bạn -->
+        <div id="upv-actions-box" style="margin-top: 15px;">
+          <!-- Render động các nút theo trạng thái bạn bè bằng JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. MODAL CHIA SẺ TIN NHẮN (CHUẨN EDUSHARE PC NHƯ IMAGE 2) -->
+  <div class="modal-backdrop" id="modal-share-message">
+    <div class="modal-card modal-share-dialog" style="max-width: 580px; width: 95%;">
+      <div class="modal-card-header">
+        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-color);">Chia sẻ</h3>
+        <button type="button" class="btn-close-modal" data-close="modal-share-message"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-card-body" style="padding: 14px 18px;">
+        <!-- Ô tìm kiếm -->
+        <div class="share-search-bar">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="share-search-input" placeholder="Tìm kiếm...">
+        </div>
+
+        <!-- Tabs phân loại -->
+        <div class="share-nav-tabs">
+          <button type="button" class="share-tab-btn active" data-share-tab="recent">Gần đây</button>
+          <button type="button" class="share-tab-btn" data-share-tab="groups">Nhóm trò chuyện</button>
+          <button type="button" class="share-tab-btn" data-share-tab="friends">Bạn bè</button>
+        </div>
+
+        <!-- Khung 2 cột chọn người nhận (Chuẩn EduShare PC) -->
+        <div class="share-dual-container">
+          <!-- Cột trái: Danh sách các liên hệ / nhóm kèm checkbox -->
+          <div class="share-col-left" id="share-targets-list">
+            <!-- Render động bằng JS -->
+          </div>
+
+          <!-- Cột phải: Danh sách đã chọn -->
+          <div class="share-col-right">
+            <div class="share-selected-header">
+              <span>Đã chọn: <strong id="share-selected-count">0</strong>/100</span>
+              <button type="button" class="btn-share-clear-all" id="btn-share-clear-all">Xóa</button>
+            </div>
+            <div class="share-selected-list" id="share-selected-chips-list">
+              <!-- Render danh sách chip đã chọn -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Xem trước nội dung chia sẻ -->
+        <div class="share-preview-bottom">
+          <div class="share-preview-title">Chia sẻ tin nhắn</div>
+          <div class="share-preview-box" id="share-preview-snippet">
+            <!-- Nội dung xem trước -->
+          </div>
+          <input type="text" class="share-extra-input" id="share-extra-message-input" placeholder="Nhập tin nhắn...">
+        </div>
+      </div>
+
+      <!-- Footer với 2 nút Hủy và Chia sẻ -->
+      <div class="modal-card-footer share-footer" style="display: flex; justify-content: flex-end; gap: 10px; padding: 12px 18px; border-top: 1px solid var(--border-color);">
+        <button type="button" class="btn-secondary-edushare" data-close="modal-share-message" style="padding: 7px 20px; font-weight: 500;">Hủy</button>
+        <button type="button" class="btn-primary-edushare" id="btn-confirm-share-message" style="padding: 7px 24px; font-weight: 600;">
+          Chia sẻ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 11. FLOATING REACTIONS BAR (Thả biểu cảm EduShare: hover trên PC, long-press trên Mobile) -->
+  <div class="floating-reaction-bar" id="floating-reaction-bar" style="display: none;">
+    <button type="button" class="reaction-item" data-emoji="👍" title="Thích">👍</button>
+    <button type="button" class="reaction-item" data-emoji="❤️" title="Yêu thích">❤️</button>
+    <button type="button" class="reaction-item" data-emoji="😂" title="Haha">😂</button>
+    <button type="button" class="reaction-item" data-emoji="😮" title="Wow">😮</button>
+    <button type="button" class="reaction-item" data-emoji="😢" title="Buồn">😢</button>
+    <button type="button" class="reaction-item" data-emoji="😡" title="Phẫn nộ">😡</button>
+  </div>
+
+  <!-- MODAL: KẾT NỐI & CHIA SẺ BẢNG VẼ GEOCHALK HÌNH HỌC -->
+  <div class="modal-backdrop" id="modal-geochalk">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-card-header">
+        <h3><i class="fa-solid fa-shapes text-primary"></i> Bảng Vẽ Hình Học GeoChalk</h3>
+        <button type="button" class="btn-close-modal" data-close="modal-geochalk"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-card-body" style="padding: 16px 20px;">
+        <div style="background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.1) 100%); border-radius: 10px; padding: 14px; margin-bottom: 16px; border: 1px solid rgba(139,92,246,0.25);">
+          <div style="font-weight: 600; font-size: 14px; color: #7c3aed; margin-bottom: 4px;">
+            <i class="fa-solid fa-cube"></i> Phân Hệ Hình Học Không Gian & 2D
+          </div>
+          <div style="font-size: 12.5px; color: var(--text-color); line-height: 1.5;">
+            GeoChalk được tích hợp trực tiếp với EduShare qua cơ chế <strong>Đăng nhập 1-chạm (SSO)</strong>. Bạn có thể mở bảng vẽ trực tiếp hoặc chia sẻ dự án vào nhóm học tập.
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <button type="button" class="btn-primary" id="btn-geochalk-launch" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px; font-weight: 600;">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Mở Bảng Vẽ GeoChalk Ngay
+          </button>
+
+          <div style="text-align: center; font-size: 12px; color: var(--text-muted); position: relative; margin: 4px 0;">
+            <span>— HOẶC ĐÍNH KÈM BÀI VẼ VÀO TIN NHẮN —</span>
+          </div>
+
+          <div class="form-group" style="margin-bottom: 10px;">
+            <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block;">Tiêu đề bài vẽ:</label>
+            <input type="text" id="geochalk-attach-title" class="form-input" placeholder="Ví dụ: Hình chóp S.ABC có đáy là tam giác đều" style="width: 100%;">
+          </div>
+
+          <div class="form-group" style="margin-bottom: 14px;">
+            <label style="font-size: 12px; font-weight: 600; margin-bottom: 4px; display: block;">Mã dự án (Project ID) hoặc Link bài vẽ:</label>
+            <input type="text" id="geochalk-attach-id" class="form-input" placeholder="Ví dụ: geochalk_prj_12345 hoặc link mở bài vẽ" style="width: 100%;">
+          </div>
+
+          <button type="button" class="btn-secondary-edushare" id="btn-geochalk-attach-submit" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 16px;">
+            <i class="fa-solid fa-paperclip"></i> Đính kèm bài vẽ vào tin nhắn
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL XEM CHI TIẾT BIỂU CẢM (REACTIONS LIST) -->
+  <div class="modal-backdrop" id="modal-message-reactions">
+    <div class="modal-card modal-reactions-card" style="max-width: 480px; width: 92%; border-radius: 12px; overflow: hidden;">
+      <div class="modal-card-header" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border-color);">
+        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-color); margin: 0;">Biểu cảm</h3>
+        <button type="button" class="btn-close-modal" data-close="modal-message-reactions" style="border: none; background: none; font-size: 18px; cursor: pointer; color: var(--text-muted);"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="reactions-dual-container">
+        <!-- Cột trái: Tab Tất cả & các emoji (Chuẩn hình) -->
+        <div class="reactions-tabs-col" id="reactions-tabs">
+          <!-- Render tabs bằng JS: Tất cả, 😡, 👍... -->
+        </div>
+        <!-- Cột phải: Danh sách người đã thả biểu cảm -->
+        <div class="reactions-users-col" id="reactions-users-list">
+          <!-- Render danh sách người dùng kèm vương miện và icon biểu cảm -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12. BẢNG TÙY CHỌN CHUỘT PHẢI / NHẤN GIỮ (CONTEXT MENU TINH GỌN CHUẨN EDUSHARE PC) -->
+  <div class="chat-context-menu" id="chat-context-menu" style="display: none;">
+    <div class="cmenu-item" data-action="reply">
+      <i class="fa-solid fa-quote-left"></i>
+      <span>Trả lời</span>
+    </div>
+    <div class="cmenu-item" data-action="share">
+      <i class="fa-solid fa-share"></i>
+      <span>Chia sẻ</span>
+    </div>
+    <div class="cmenu-item" data-action="copy">
+      <i class="fa-regular fa-copy"></i>
+      <span id="cmenu-copy-label">Copy tin nhắn</span>
+    </div>
+    <div class="cmenu-item" data-action="download" id="cmenu-download-item" style="display: none;">
+      <i class="fa-solid fa-download"></i>
+      <span id="cmenu-download-label">Lưu về máy</span>
+    </div>
+    <div class="cmenu-item" data-action="pin">
+      <i class="fa-solid fa-thumbtack"></i>
+      <span id="cmenu-pin-label">Ghim tin nhắn</span>
+    </div>
+    <div class="cmenu-item" data-action="select_multiple">
+      <i class="fa-solid fa-list-check"></i>
+      <span>Chọn nhiều tin nhắn</span>
+    </div>
+    <div class="cmenu-divider" id="cmenu-recall-divider" style="display: none;"></div>
+    <div class="cmenu-item text-danger" data-action="recall" id="cmenu-recall-item" style="display: none;">
+      <i class="fa-solid fa-rotate-left"></i>
+      <span>Thu hồi</span>
+    </div>
+    <div class="cmenu-item text-danger" data-action="delete_for_me">
+      <i class="fa-regular fa-trash-can"></i>
+      <span>Xóa chỉ ở phía tôi</span>
+    </div>
+    <div class="cmenu-divider"></div>
+    <div class="cmenu-reactions-strip" id="cmenu-reactions-strip" title="Thả biểu cảm nhanh">
+      <button type="button" class="reaction-item" data-emoji="👍" title="Thích">👍</button>
+      <button type="button" class="reaction-item" data-emoji="❤️" title="Yêu thích">❤️</button>
+      <button type="button" class="reaction-item" data-emoji="😂" title="Haha">😂</button>
+      <button type="button" class="reaction-item" data-emoji="😮" title="Wow">😮</button>
+      <button type="button" class="reaction-item" data-emoji="😢" title="Buồn">😢</button>
+      <button type="button" class="reaction-item" data-emoji="😡" title="Phẫn nộ">😡</button>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER THÔNG BÁO HỆ THỐNG -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- JAVASCRIPT APP -->
+  <script src="app.js?v=20261105.300"></script>
+</body>
+</html>
