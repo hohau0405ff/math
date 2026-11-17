@@ -127,7 +127,8 @@
       }
       const options = {
         method: method,
-        headers: headers
+        headers: headers,
+        cache: 'no-store'
       };
       if (body) {
         options.body = JSON.stringify(body);
@@ -286,10 +287,11 @@
   }
 
   function initModals() {
-    // Đóng khi bấm vào nút close có data-close
-    document.querySelectorAll('.btn-close-modal').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const target = btn.dataset.close;
+    // Đóng khi bấm vào bất kỳ nút close nào có data-close
+    document.querySelectorAll('[data-close]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const target = btn.dataset.close || btn.getAttribute('data-close');
         if (target) closeModal(target);
       });
     });
@@ -298,7 +300,7 @@
     document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
       backdrop.addEventListener('click', (e) => {
         if (e.target === backdrop) {
-          backdrop.classList.remove('active');
+          closeModal(backdrop.id);
         }
       });
     });
@@ -306,7 +308,11 @@
     // Phím tắt Escape đóng mọi modal, drawer và popover
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        document.querySelectorAll('.modal-backdrop.active').forEach(m => m.classList.remove('active'));
+        document.querySelectorAll('.modal-backdrop').forEach(m => {
+          if (m.classList.contains('active') || m.style.display === 'flex') {
+            closeModal(m.id);
+          }
+        });
         document.getElementById('chat-info-drawer')?.classList.add('hidden');
         const emojiPopover = document.getElementById('emoji-picker-popover');
         if (emojiPopover) emojiPopover.style.display = 'none';
@@ -370,9 +376,19 @@
       localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
       localStorage.removeItem(STORAGE_KEYS.ACCESS_TOKEN);
     } else {
-      localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+      try {
+        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+      } catch (err) {
+        console.warn('Lỗi lưu currentUser vào LocalStorage:', err);
+      }
     }
     updateUserUI();
+
+    // Làm mới kết nối WebSocket để handshake mang user_email mới nhất ngay lập tức
+    if (typeof wsClient !== 'undefined' && wsClient) {
+      try { wsClient.close(); } catch (_) {}
+      wsClient = null;
+    }
     if (typeof initWebSocket === 'function') {
       initWebSocket();
     }
@@ -750,6 +766,178 @@
     }, 1000);
   }
 
+  // ==================== TIỆN ÍCH NÉN ẢNH AVATAR BẰNG HTML5 CANVAS ====================
+  function resizeImageToDataUrl(file, maxWidth = 256, maxHeight = 256, quality = 0.88) {
+    return new Promise((resolve, reject) => {
+      if (!file) return reject(new Error('Tệp không tồn tại'));
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = reject;
+        img.onload = () => {
+          try {
+            const width = img.width || maxWidth;
+            const height = img.height || maxHeight;
+            const minDim = Math.min(width, height);
+            const startX = (width - minDim) / 2;
+            const startY = (height - minDim) / 2;
+
+            const canvas = document.createElement('canvas');
+            const targetSize = Math.min(maxWidth, maxHeight);
+            canvas.width = targetSize;
+            canvas.height = targetSize;
+
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              return resolve(e.target.result);
+            }
+
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            // Cắt vuông tỷ lệ 1:1 từ tâm ảnh để avatar luôn cân đối
+            ctx.drawImage(img, startX, startY, minDim, minDim, 0, 0, targetSize, targetSize);
+
+            // Xuất định dạng WebP/JPEG nhẹ gọn (~10KB - 25KB)
+            let resultUrl = '';
+            try {
+              resultUrl = canvas.toDataURL('image/webp', quality);
+            } catch (_) {}
+
+            if (!resultUrl || !resultUrl.startsWith('data:image/webp')) {
+              try {
+                resultUrl = canvas.toDataURL('image/jpeg', quality);
+              } catch (_) {
+                resultUrl = e.target.result;
+              }
+            }
+            resolve(resultUrl || e.target.result);
+          } catch (err) {
+            console.warn('Lỗi xử lý canvas avatar:', err);
+            resolve(e.target.result);
+          }
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // ==================== ĐỒNG BỘ ẢNH ĐẠI DIỆN TỨC THÌ (OPTIMISTIC ZERO-LATENCY) ====================
+  function syncUserAvatarAcrossUI(email, name, avatar, subInfo) {
+    if (!email) return;
+    const lowerEmail = email.toLowerCase().trim();
+
+    // 1. Cập nhật AppState.currentUser nếu trùng email
+    if (AppState.currentUser && (AppState.currentUser.email || '').toLowerCase().trim() === lowerEmail) {
+      if (avatar) AppState.currentUser.avatar = avatar;
+      if (name) AppState.currentUser.name = name;
+      if (subInfo !== undefined) {
+        AppState.currentUser.subInfo = subInfo;
+        AppState.currentUser.sub_info = subInfo;
+      }
+      try {
+        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(AppState.currentUser));
+      } catch (err) {
+        console.warn('Lỗi lưu currentUser:', err);
+      }
+      updateUserUI();
+    }
+
+    // 2. Cập nhật trong danh sách người dùng AppState.users
+    if (AppState.users && Array.isArray(AppState.users)) {
+      const uIdx = AppState.users.findIndex(x => (x.email || '').toLowerCase().trim() === lowerEmail);
+      if (uIdx !== -1) {
+        if (avatar) AppState.users[uIdx].avatar = avatar;
+        if (name) AppState.users[uIdx].name = name;
+        if (subInfo !== undefined) {
+          AppState.users[uIdx].subInfo = subInfo;
+          AppState.users[uIdx].sub_info = subInfo;
+        }
+      }
+    }
+
+    // 3. Cập nhật tin nhắn trong bộ nhớ AppState.messages
+    if (AppState.messages && Array.isArray(AppState.messages)) {
+      AppState.messages.forEach(m => {
+        if ((m.sender_email || '').toLowerCase().trim() === lowerEmail) {
+          if (avatar) m.sender_avatar = avatar;
+          if (name) m.sender_name = name;
+        }
+      });
+    }
+
+    // 4. Cập nhật bài viết và bình luận trong bộ nhớ AppState.posts
+    if (AppState.posts && Array.isArray(AppState.posts)) {
+      AppState.posts.forEach(p => {
+        if ((p.author_email || '').toLowerCase().trim() === lowerEmail) {
+          if (avatar) p.avatar = avatar;
+          if (name) p.author_name = name;
+        }
+        if (p.comments && Array.isArray(p.comments)) {
+          p.comments.forEach(c => {
+            if ((c.author_email || '').toLowerCase().trim() === lowerEmail) {
+              if (avatar) c.avatar = avatar;
+              if (name) c.author_name = name;
+            }
+          });
+        }
+      });
+    }
+
+    // 5. Cập nhật trực tiếp DOM của các phần tử đang hiển thị trên trang (0ms Delay)
+    if (avatar) {
+      // Tin nhắn trong khung chat
+      document.querySelectorAll(`.msg-row[data-sender-email="${lowerEmail}"] img.msg-avatar, img.msg-avatar[data-sender-email="${lowerEmail}"]`).forEach(img => {
+        img.src = avatar;
+      });
+
+      // Bài viết trên bảng tin
+      document.querySelectorAll(`.post-card[data-author-email="${lowerEmail}"] .post-author-box img, img.post-author-avatar-img[data-author-email="${lowerEmail}"]`).forEach(img => {
+        img.src = avatar;
+      });
+
+      // Bình luận bài viết
+      document.querySelectorAll(`.comment-item[data-author-email="${lowerEmail}"] img, img.comment-avatar-img[data-author-email="${lowerEmail}"]`).forEach(img => {
+        img.src = avatar;
+      });
+
+      // Cuộc trò chuyện đang mở (nếu là phòng chat 1-1 với user này)
+      if (AppState.activeRoomData && AppState.activeRoomData.type === 'direct') {
+        const otherMember = (AppState.activeRoomData.members || []).find(m => (m.email || '').toLowerCase().trim() === lowerEmail);
+        if (otherMember) {
+          otherMember.avatar = avatar;
+          const headerAvatar = document.getElementById('chat-header-avatar');
+          if (headerAvatar) headerAvatar.src = avatar;
+        }
+      }
+    }
+
+    if (name) {
+      document.querySelectorAll(`.msg-row[data-sender-email="${lowerEmail}"] .msg-sender-meta span`).forEach(el => {
+        el.textContent = name;
+      });
+      document.querySelectorAll(`.post-card[data-author-email="${lowerEmail}"] .post-author-name`).forEach(el => {
+        el.textContent = name;
+      });
+      document.querySelectorAll(`.comment-item[data-author-email="${lowerEmail}"] .comment-author`).forEach(el => {
+        el.textContent = name;
+      });
+      if (AppState.activeRoomData && AppState.activeRoomData.type === 'direct') {
+        const otherMember = (AppState.activeRoomData.members || []).find(m => (m.email || '').toLowerCase().trim() === lowerEmail);
+        if (otherMember) {
+          otherMember.name = name;
+          const headerTitle = document.getElementById('chat-header-title');
+          if (headerTitle) headerTitle.textContent = name;
+        }
+      }
+    }
+
+    // 6. Cập nhật danh sách phòng và danh bạ nếu đang mở
+    renderRoomsList();
+    renderContactsList();
+  }
+
   // ==================== HỒ SƠ CÁ NHÂN & ĐỔI AVATAR ĐỒNG BỘ ====================
   function initProfileSystem() {
     const triggerProfile = () => {
@@ -778,6 +966,8 @@
           AppState.tempProfileAvatar = url;
           const preview = document.getElementById('profile-edit-avatar-preview');
           if (preview) preview.src = url;
+          const statusText = document.getElementById('profile-upload-status-text');
+          if (statusText) statusText.textContent = 'Đã chọn ảnh mẫu hệ thống';
         };
         presetGrid.appendChild(btn);
       });
@@ -788,61 +978,82 @@
       const file = e.target.files[0];
       if (file) {
         const statusText = document.getElementById('profile-upload-status-text');
-        if (statusText) statusText.textContent = `Đã chọn: ${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          AppState.tempProfileAvatar = evt.target.result;
+        if (statusText) statusText.textContent = `Đang xử lý ảnh: ${file.name}...`;
+
+        resizeImageToDataUrl(file, 256, 256, 0.88).then(dataUrl => {
+          AppState.tempProfileAvatar = dataUrl;
           const preview = document.getElementById('profile-edit-avatar-preview');
-          if (preview) preview.src = evt.target.result;
-        };
-        reader.readAsDataURL(file);
+          if (preview) preview.src = dataUrl;
+          if (statusText) {
+            const kb = Math.round(dataUrl.length * 0.75 / 1024);
+            statusText.textContent = `Đã chọn: ${file.name} (Tối ưu ~${kb} KB)`;
+          }
+        }).catch(err => {
+          console.warn('Lỗi nén ảnh, sử dụng FileReader mặc định:', err);
+          const reader = new FileReader();
+          reader.onload = (evt) => {
+            AppState.tempProfileAvatar = evt.target.result;
+            const preview = document.getElementById('profile-edit-avatar-preview');
+            if (preview) preview.src = evt.target.result;
+            if (statusText) statusText.textContent = `Đã chọn: ${file.name}`;
+          };
+          reader.readAsDataURL(file);
+        });
       }
     });
 
-    // Form Lưu hồ sơ & Đồng bộ Avatar
-    document.getElementById('form-edit-profile')?.addEventListener('submit', async (e) => {
+    // Form Lưu hồ sơ & Đồng bộ Avatar (Zero Latency Optimistic UI)
+    document.getElementById('form-edit-profile')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const u = AppState.currentUser;
-      if (u.role === 'guest') return;
+      if (u.role === 'guest') {
+        showToast('Vui lòng đăng nhập để chỉnh sửa hồ sơ!', 'warning');
+        return;
+      }
 
-      const name = document.getElementById('profile-edit-name')?.value.trim();
-      const subInfo = document.getElementById('profile-edit-subinfo')?.value.trim();
-      const avatar = AppState.tempProfileAvatar || u.avatar;
+      const nameInput = document.getElementById('profile-edit-name');
+      const subInput = document.getElementById('profile-edit-subinfo');
+      const preview = document.getElementById('profile-edit-avatar-preview');
+      const name = nameInput ? nameInput.value.trim() : u.name;
+      const subInfo = subInput ? subInput.value.trim() : (u.subInfo || '');
+      const avatar = AppState.tempProfileAvatar || (preview ? preview.src : u.avatar) || u.avatar;
 
       if (!name) {
         showToast('Vui lòng nhập họ và tên!', 'error');
         return;
       }
 
-      try {
-        const res = await apiCall('/api/users/profile', 'PUT', {
-          email: u.email,
-          name: name,
-          sub_info: subInfo,
-          avatar: avatar
-        });
+      // 1. CẬP NHẬT TRẠNG THÁI VÀ GIAO DIỆN NGAY LẬP TỨC (0ms DELAY)
+      const updatedUser = {
+        ...u,
+        name: name,
+        subInfo: subInfo,
+        sub_info: subInfo,
+        avatar: avatar
+      };
 
+      saveCurrentUser(updatedUser);
+      syncUserAvatarAcrossUI(updatedUser.email, updatedUser.name, updatedUser.avatar, updatedUser.subInfo);
+
+      // Đóng modal và báo thành công ngay lập tức
+      closeModal('modal-profile');
+      showToast('Đã lưu hồ sơ và tự động đồng bộ ảnh đại diện ngay lập tức!', 'success');
+
+      // 2. GỬI YÊU CẦU LƯU VÀ PHÁT SÓNG LÊN MÁY CHỦ TRONG NỀN (BACKGROUND SYNC)
+      apiCall('/api/users/profile', 'PUT', {
+        email: u.email,
+        name: name,
+        sub_info: subInfo,
+        avatar: avatar
+      }).then(res => {
         if (res.status === 'success' && res.user) {
           saveCurrentUser(res.user);
-          const uIdx = (AppState.users || []).findIndex(x => x.email.toLowerCase() === res.user.email.toLowerCase());
-          if (uIdx !== -1) {
-            AppState.users[uIdx] = { ...AppState.users[uIdx], ...res.user };
-          }
-          closeModal('modal-profile');
-          showToast('Đã lưu hồ sơ và tự động đồng bộ họ tên, ảnh đại diện toàn bộ hệ thống!', 'success');
-          updateUserUI();
-          loadMessages(AppState.activeRoomId);
-          loadPosts();
-          loadRooms();
-          renderContactsList();
-          if (AppState.activeRoomData) {
-            updateChatHeader(AppState.activeRoomData);
-            renderGroupInfoDrawer(AppState.activeRoomData);
-          }
+          syncUserAvatarAcrossUI(res.user.email, res.user.name, res.user.avatar, res.user.sub_info || res.user.subInfo);
         }
-      } catch (err) {
-        showToast('Lỗi cập nhật hồ sơ: ' + err.message, 'error');
-      }
+      }).catch(err => {
+        console.warn('Lỗi lưu hồ sơ lên server:', err);
+        showToast('Đã lưu cục bộ: Máy chủ chưa phản hồi (' + (err.message || 'Lỗi mạng') + ')', 'warning');
+      });
     });
   }
 
@@ -851,10 +1062,12 @@
     const nameInput = document.getElementById('profile-edit-name');
     const subInput = document.getElementById('profile-edit-subinfo');
     const preview = document.getElementById('profile-edit-avatar-preview');
+    const statusText = document.getElementById('profile-upload-status-text');
 
-    if (nameInput) nameInput.value = u.name;
-    if (subInput) subInput.value = u.subInfo || '';
-    if (preview) preview.src = u.avatar;
+    if (nameInput) nameInput.value = u.name || '';
+    if (subInput) subInput.value = u.subInfo || u.sub_info || '';
+    if (preview) preview.src = u.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=GuestVisitor';
+    if (statusText) statusText.textContent = 'Chọn ảnh từ thiết bị (JPG, PNG, WebP)...';
     AppState.tempProfileAvatar = u.avatar;
 
     openModal('modal-profile');
@@ -1156,8 +1369,13 @@
         avatarHtml = `<img src="${room.avatar}" alt="Avatar" style="width:100%; height:100%; border-radius:50%; object-fit:cover;">`;
       }
 
-      const lastMsgText = room.last_message ? room.last_message.text : 'Chưa có tin nhắn nào';
-      const timeBadgeText = (room.last_message && room.last_message.created_at) ? formatMsgTime(room.last_message.created_at) : (isDirect ? 'Cá nhân' : `${room.members_count} TV`);
+      const lastMsgText = typeof room.last_message === 'object' && room.last_message !== null
+        ? (room.last_message.text || (room.last_message.attachment ? '[Tệp tin đính kèm]' : ''))
+        : (room.last_message || 'Chưa có tin nhắn nào');
+      const lastMsgTime = typeof room.last_message === 'object' && room.last_message !== null
+        ? room.last_message.created_at
+        : (room.last_time || null);
+      const timeBadgeText = lastMsgTime ? formatMsgTime(lastMsgTime) : (isDirect ? 'Cá nhân' : `${room.members_count || 1} TV`);
 
       item.innerHTML = `
         <div class="room-avatar-box">
@@ -1231,7 +1449,11 @@
       });
     }
 
-    if (window.innerWidth <= 900) {
+    if (typeof syncActiveRoomMessages === 'function') {
+      setTimeout(() => syncActiveRoomMessages(true), 100);
+    }
+
+    if (window.innerWidth <= 768) {
       document.getElementById('sidebar-column')?.classList.add('sidebar-mobile-hidden');
     }
   }
@@ -1370,6 +1592,9 @@
     row.className = `msg-row ${isOutgoing ? 'outgoing' : 'incoming'} ${msg.status === 'failed' ? 'msg-send-failed' : ''}`;
     row.id = `msg-row-${msg.id}`;
     row.setAttribute('data-msg-id', msg.id);
+    if (msg.sender_email) {
+      row.setAttribute('data-sender-email', msg.sender_email.toLowerCase().trim());
+    }
 
     // Thao tác chuột phải hiện bảng tùy chọn EduShare PC
     row.oncontextmenu = (e) => handleMessageContextMenu(e, msg);
@@ -1566,7 +1791,7 @@
     }
 
     row.innerHTML = `
-      ${!isOutgoing ? `<img src="${msg.sender_avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=User'}" alt="Avatar" class="msg-avatar" onclick="window.EduShare.openUserProfile('${msg.sender_email}')" title="Bấm để xem hồ sơ và kết bạn" style="cursor:pointer;">` : ''}
+      ${!isOutgoing ? `<img src="${msg.sender_avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=User'}" alt="Avatar" class="msg-avatar" data-sender-email="${(msg.sender_email || '').toLowerCase().trim()}" onclick="window.EduShare.openUserProfile('${msg.sender_email}')" title="Bấm để xem hồ sơ và kết bạn" style="cursor:pointer;">` : ''}
       <div class="msg-body-col">
         ${!isOutgoing ? `
           <div class="msg-sender-meta">
@@ -1865,7 +2090,7 @@
     document.addEventListener('click', (e) => {
       const drawer = document.getElementById('chat-info-drawer');
       const toggleBtn = document.getElementById('btn-toggle-info-drawer');
-      if (drawer && !drawer.classList.contains('hidden') && window.innerWidth <= 900) {
+      if (drawer && !drawer.classList.contains('hidden') && window.innerWidth <= 768) {
         if (!drawer.contains(e.target) && !toggleBtn?.contains(e.target)) {
           drawer.classList.add('hidden');
         }
@@ -1877,9 +2102,15 @@
       switchMainTab('forum');
     });
 
-    // Mobile: Tự động cuộn khung chat khi bàn phím ảo hiển thị
-    // Tự động đóng Panel thông tin khi màn hình thu hẹp < 768px (Item 12)
+    // Tự động đóng Panel thông tin khi màn hình thu hẹp < 768px và đồng bộ hiển thị sidebar khi co giãn
     window.addEventListener('resize', () => {
+      if (window.innerWidth > 768) {
+        document.getElementById('sidebar-column')?.classList.remove('sidebar-mobile-hidden');
+      } else {
+        if (AppState.activeRoomId && AppState.activeTab === 'chat') {
+          document.getElementById('sidebar-column')?.classList.add('sidebar-mobile-hidden');
+        }
+      }
       if (window.innerWidth < 768) {
         document.getElementById('chat-info-drawer')?.classList.add('hidden');
       }
@@ -4184,6 +4415,9 @@
     const currentUserId = (AppState.currentUser?.id || '').trim();
     const postAuthorId = (post.authorId || post.author_id || '').trim();
     const postAuthorEmail = (post.author_email || '').trim().toLowerCase();
+    if (postAuthorEmail) {
+      card.setAttribute('data-author-email', postAuthorEmail);
+    }
 
     // PHẦN 1: PHÂN QUYỀN XÓA BÀI ĐĂNG (Delete Post Authorization)
     // Chỉ hiển thị nút "Xóa bài viết" nếu currentUser.id === post.authorId (hoặc email tương ứng nếu post cũ)
@@ -4239,12 +4473,13 @@
 
     let commentsListHtml = '';
     comments.forEach(c => {
+      const cEmail = (c.author_email || '').toLowerCase().trim();
       commentsListHtml += `
-        <div class="comment-item">
-          <img src="${c.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=User'}" class="avatar-mini" alt="Avatar">
+        <div class="comment-item" ${cEmail ? `data-author-email="${escapeHtml(cEmail)}"` : ''}>
+          <img src="${c.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=User'}" class="avatar-mini comment-avatar-img" ${cEmail ? `data-author-email="${escapeHtml(cEmail)}"` : ''} alt="Avatar">
           <div class="comment-bubble">
-            <div class="comment-author">${c.author_name}</div>
-            <div>${c.content}</div>
+            <div class="comment-author" ${cEmail ? `data-author-name-for="${escapeHtml(cEmail)}"` : ''}>${escapeHtml(c.author_name || 'Người dùng')}</div>
+            <div>${escapeHtml(c.content || '')}</div>
           </div>
         </div>
       `;
@@ -4285,9 +4520,9 @@
       ${optimisticBannerHtml}
       <div class="post-header-row">
         <div class="post-author-box">
-          <img src="${post.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=User'}" class="avatar-mini" alt="Avatar">
+          <img src="${post.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed=User'}" class="avatar-mini post-author-avatar-img" ${postAuthorEmail ? `data-author-email="${escapeHtml(postAuthorEmail)}"` : ''} alt="Avatar">
           <div>
-            <div class="post-author-name">${escapeHtml(post.author_name || 'Người dùng')}</div>
+            <div class="post-author-name" ${postAuthorEmail ? `data-author-name-for="${escapeHtml(postAuthorEmail)}"` : ''}>${escapeHtml(post.author_name || 'Người dùng')}</div>
             <div class="post-time-ago">${post.author_role_title ? escapeHtml(post.author_role_title) + ' • ' : ''}${formatTimeAgo(post.created_at)}</div>
           </div>
         </div>
@@ -5119,7 +5354,7 @@
       loadUsers();
     }
 
-    if (window.innerWidth <= 900) {
+    if (window.innerWidth <= 768) {
       document.getElementById('sidebar-column')?.classList.add('sidebar-mobile-hidden');
     }
   }
@@ -5808,6 +6043,21 @@
   let wsReconnectTimeout = null;
   let wsPingInterval = null;
   let isWsConnecting = false;
+  const wsSendQueue = [];
+
+  function sendWsMessage(payload) {
+    const raw = typeof payload === 'string' ? payload : JSON.stringify(payload);
+    if (wsClient && wsClient.readyState === WebSocket.OPEN) {
+      try {
+        wsClient.send(raw);
+      } catch (err) {
+        console.warn('[WS] Lỗi gửi dữ liệu socket:', err);
+      }
+    } else {
+      // Lưu vào hàng đợi để gửi ngay khi kết nối thành công
+      wsSendQueue.push(raw);
+    }
+  }
 
   function initWebSocket() {
     if (isWsConnecting) return;
@@ -5822,8 +6072,12 @@
 
     try {
       isWsConnecting = true;
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.host;
+      let protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      let host = window.location.host;
+      if (!host || host === '' || window.location.protocol === 'file:') {
+        host = 'localhost:5500';
+        protocol = 'ws:';
+      }
       const userEmail = (AppState.currentUser?.email || '').trim().toLowerCase();
       const roomId = AppState.activeRoomId || 'room_community';
       const wsUrl = `${protocol}//${host}/ws?user_email=${encodeURIComponent(userEmail)}&room_id=${encodeURIComponent(roomId)}`;
@@ -5833,16 +6087,35 @@
       wsClient.onopen = () => {
         isWsConnecting = false;
         console.log('[*] WebSocket kết nối thành công:', wsUrl);
+        const curUserEmail = (AppState.currentUser?.email || '').trim().toLowerCase();
+        if (curUserEmail) {
+          sendWsMessage({
+            type: 'set_user',
+            user_email: curUserEmail
+          });
+        }
         sendWsMessage({
           type: 'join_room',
           room_id: AppState.activeRoomId,
-          user_email: userEmail
+          user_email: curUserEmail
         });
+
+        // Xả toàn bộ gói tin trong hàng đợi còn tồn đọng
+        while (wsSendQueue.length > 0) {
+          const item = wsSendQueue.shift();
+          try { wsClient.send(item); } catch (_) {}
+        }
+
+        // Bù đắp ngay toàn bộ tin nhắn bị lỡ trong lúc mất kết nối
+        if (AppState.activeRoomId && AppState.activeTab === 'chat') {
+          syncActiveRoomMessages(true);
+        }
+        loadRooms();
 
         if (wsPingInterval) clearInterval(wsPingInterval);
         wsPingInterval = setInterval(() => {
           sendWsMessage({ type: 'ping' });
-        }, 25000);
+        }, 15000);
       };
 
       wsClient.onmessage = (event) => {
@@ -5876,74 +6149,68 @@
     if (wsReconnectTimeout) clearTimeout(wsReconnectTimeout);
     wsReconnectTimeout = setTimeout(() => {
       initWebSocket();
-    }, 3000);
-  }
-
-  function sendWsMessage(payload) {
-    if (wsClient && wsClient.readyState === WebSocket.OPEN) {
-      try {
-        wsClient.send(typeof payload === 'string' ? payload : JSON.stringify(payload));
-      } catch (err) {
-        console.warn('[WS] Lỗi gửi dữ liệu socket:', err);
-      }
-    }
+    }, 2500);
   }
 
   function handleWebSocketMessage(data) {
     if (!data || !data.type) return;
 
-    switch (data.type) {
-      case 'pong':
-        break;
+    try {
+      switch (data.type) {
+        case 'pong':
+          break;
 
-      case 'new_message': {
-        const msg = data.message;
-        const targetRoomId = data.room_id || msg.room_id;
-        if (!msg) break;
+        case 'new_message': {
+          const msg = data.message;
+          const targetRoomId = data.room_id || msg.room_id;
+          if (!msg) break;
 
-        // Cập nhật thông tin phòng trong danh sách sidebar
-        const room = (AppState.rooms || []).find(r => r.id === targetRoomId);
-        if (room) {
-          room.last_message = msg.text || (msg.attachment ? '[Tệp tin đính kèm]' : '');
-          room.last_time = msg.created_at || new Date().toISOString();
-          if (targetRoomId !== AppState.activeRoomId) {
-            room.unread_count = (room.unread_count || 0) + 1;
+          // Cập nhật thông tin phòng trong danh sách sidebar
+          const room = (AppState.rooms || []).find(r => r.id === targetRoomId);
+          if (room) {
+            room.last_message = {
+              text: msg.text || (msg.attachment ? '[Tệp tin đính kèm]' : ''),
+              created_at: msg.created_at || new Date().toISOString()
+            };
+            room.last_time = msg.created_at || new Date().toISOString();
+            if (targetRoomId !== AppState.activeRoomId) {
+              room.unread_count = (room.unread_count || 0) + 1;
+            }
+            renderRoomsList();
           }
-          renderRoomsList();
+
+          // Nếu tin nhắn thuộc phòng chat đang mở trên màn hình
+          if (targetRoomId === AppState.activeRoomId) {
+            const currentMyEmail = (AppState.currentUser?.email || '').trim().toLowerCase();
+            const senderEmail = (msg.sender_email || '').trim().toLowerCase();
+            const isSenderMe = Boolean(currentMyEmail && senderEmail && currentMyEmail === senderEmail);
+
+            // Kiểm tra xem tin nhắn với real ID này đã được render chưa
+            const existingRealRow = document.getElementById(`msg-row-${msg.id}`);
+            if (existingRealRow) {
+              existingRealRow.classList.remove('msg-send-failed');
+              break;
+            }
+
+            // Kiểm tra đối soát Optimistic UI nếu người gửi là chính mình
+            let matchedTempMsg = null;
+            if (isSenderMe && AppState.messages) {
+              matchedTempMsg = AppState.messages.find(m =>
+                m.id && String(m.id).startsWith('temp_msg_') &&
+                m.room_id === targetRoomId &&
+                m.text === msg.text
+              );
+            }
+
+            if (matchedTempMsg) {
+              reconcileOptimisticMessage(msg, matchedTempMsg.id);
+            } else {
+              // Tin nhắn từ User B hoặc thiết bị khác: render ngay và tự động cuộn
+              appendIncomingRealtimeMessage(msg);
+            }
+          }
+          break;
         }
-
-        // Nếu tin nhắn thuộc phòng chat đang mở trên màn hình
-        if (targetRoomId === AppState.activeRoomId) {
-          const currentMyEmail = (AppState.currentUser?.email || '').trim().toLowerCase();
-          const senderEmail = (msg.sender_email || '').trim().toLowerCase();
-          const isSenderMe = Boolean(currentMyEmail && senderEmail && currentMyEmail === senderEmail);
-
-          // Kiểm tra xem tin nhắn với real ID này đã được render chưa
-          const existingRealRow = document.getElementById(`msg-row-${msg.id}`);
-          if (existingRealRow) {
-            existingRealRow.classList.remove('msg-send-failed');
-            break;
-          }
-
-          // Kiểm tra đối soát Optimistic UI nếu người gửi là chính mình
-          let matchedTempMsg = null;
-          if (isSenderMe && AppState.messages) {
-            matchedTempMsg = AppState.messages.find(m =>
-              m.id && String(m.id).startsWith('temp_msg_') &&
-              m.room_id === targetRoomId &&
-              m.text === msg.text
-            );
-          }
-
-          if (matchedTempMsg) {
-            reconcileOptimisticMessage(msg, matchedTempMsg.id);
-          } else {
-            // Tin nhắn từ User B hoặc thiết bị khác: render ngay và tự động cuộn
-            appendIncomingRealtimeMessage(msg);
-          }
-        }
-        break;
-      }
 
       case 'message_recalled': {
         const msgId = data.message_id;
@@ -6024,12 +6291,31 @@
         }
         break;
       }
+
+      case 'user_profile_updated': {
+        const u = data.user;
+        if (!u || !u.email) break;
+        // Đồng bộ ảnh đại diện và thông tin trên toàn bộ giao diện theo thời gian thực
+        syncUserAvatarAcrossUI(u.email, u.name, u.avatar, u.subInfo || u.sub_info);
+        break;
+      }
     }
+  } catch (err) {
+    console.warn('[WS] Lỗi xử lý gói tin socket:', err);
   }
+}
 
   function appendIncomingRealtimeMessage(msg) {
+    if (!msg || !msg.id) return;
     const container = document.getElementById('chat-messages-container');
     if (!container) return;
+
+    // Tránh render trùng lặp nếu tin nhắn đã xuất hiện trên giao diện
+    const existing = document.getElementById(`msg-row-${msg.id}`);
+    if (existing) {
+      existing.classList.remove('msg-send-failed');
+      return;
+    }
 
     if (!AppState.messages) AppState.messages = [];
     if (!AppState.messages.some(m => m.id === msg.id)) {
@@ -6059,6 +6345,100 @@
 
     // Tự động cuộn mượt xuống tin nhắn mới nhất
     container.scrollTop = container.scrollHeight;
+  }
+
+  // ==================== CƠ CHẾ ĐỒNG BỘ TIN NHẮN TỰ ĐỘNG (SMART ACTIVE ROOM SYNC) ====================
+  let activeRoomSyncInterval = null;
+  let isSyncingActiveRoom = false;
+
+  async function syncActiveRoomMessages(forceScroll = false) {
+    const roomId = AppState.activeRoomId;
+    if (!roomId || AppState.activeTab !== 'chat') return;
+    if (isSyncingActiveRoom) return;
+
+    const container = document.getElementById('chat-messages-container');
+    if (!container) return;
+
+    try {
+      isSyncingActiveRoom = true;
+      const myEmail = encodeURIComponent(AppState.currentUser?.email || '');
+      const data = await apiCall(`/api/rooms/${roomId}/messages?user_email=${myEmail}`);
+      const serverMsgs = Array.isArray(data) ? data : [];
+      if (!serverMsgs.length) {
+        isSyncingActiveRoom = false;
+        return;
+      }
+
+      const localMsgs = AppState.messages || [];
+      let hasNewMsg = false;
+
+      // Tính khoảng cách tới đáy để quyết định tự động cuộn
+      const isNearBottom = (container.scrollHeight - container.scrollTop - container.clientHeight) < 180;
+
+      for (const sMsg of serverMsgs) {
+        const inDom = document.getElementById(`msg-row-${sMsg.id}`);
+        if (!inDom) {
+          // Bỏ qua nếu là tin nhắn chính mình đang gửi tạm (Optimistic)
+          const isMySendingTemp = localMsgs.some(m =>
+            m.id && String(m.id).startsWith('temp_msg_') &&
+            m.text === sMsg.text &&
+            (m.sender_email || '').toLowerCase() === (sMsg.sender_email || '').toLowerCase()
+          );
+
+          if (!isMySendingTemp) {
+            hasNewMsg = true;
+            appendIncomingRealtimeMessage(sMsg);
+          }
+        } else {
+          // Cập nhật trạng thái thu hồi nếu đối phương vừa thu hồi
+          if (sMsg.is_recalled && !inDom.querySelector('.msg-recalled-text')) {
+            const bubble = inDom.querySelector('.msg-text-bubble') || inDom.querySelector('.msg-bubble');
+            if (bubble) {
+              bubble.innerHTML = '<span class="msg-recalled-text" style="font-style: italic; opacity: 0.7;"><i class="fa-solid fa-rotate-left" style="font-size: 11px; margin-right: 4px;"></i> Tin nhắn đã được thu hồi</span>';
+            }
+            inDom.querySelector('.msg-attachment-box')?.remove();
+            inDom.querySelector('.btn-msg-recall')?.remove();
+            inDom.querySelector('.msg-quick-react-btn')?.remove();
+            inDom.querySelector('.msg-reaction-badge')?.remove();
+          }
+        }
+      }
+
+      if (hasNewMsg && (isNearBottom || forceScroll)) {
+        container.scrollTop = container.scrollHeight;
+      }
+    } catch (_) {
+      // Yên lặng khi có lỗi mạng tạm thời
+    } finally {
+      isSyncingActiveRoom = false;
+    }
+  }
+
+  function startActiveRoomSync() {
+    if (activeRoomSyncInterval) clearInterval(activeRoomSyncInterval);
+    // Polling thông minh mỗi 1.5s phòng vệ tuyệt đối khi mạng WebSocket bị rớt/chập chờn
+    activeRoomSyncInterval = setInterval(() => {
+      if (AppState.activeTab === 'chat' && AppState.activeRoomId && !document.hidden) {
+        syncActiveRoomMessages(false);
+      }
+    }, 1500);
+
+    // Bắt ngay khi người dùng chuyển lại tab (Focus)
+    window.addEventListener('focus', () => {
+      if (AppState.activeTab === 'chat' && AppState.activeRoomId) {
+        syncActiveRoomMessages(true);
+        loadRooms();
+      }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        if (AppState.activeTab === 'chat' && AppState.activeRoomId) {
+          syncActiveRoomMessages(true);
+          loadRooms();
+        }
+      }
+    });
   }
 
   function reconcileOptimisticMessage(realMsg, tempId) {
@@ -6093,29 +6473,37 @@
 
   // ==================== KHỞI CHẠY ỨNG DỤNG ====================
   function initApp() {
-    initTheme();
-    loadSavedUser();
-    initModals();
-    initAuthSystem();
-    initProfileSystem();
-    initGroupCreationAndJoin();
-    initChatEvents();
-    initGeoChalkSystem();
-    initForumEvents();
-    initVaultEvents();
-    initContactsEvents();
-    initNavRailEvents();
-    initPreviewEvents();
-    initReactionBarEvents();
+    const tasks = [
+      ['Theme', initTheme],
+      ['User', loadSavedUser],
+      ['Modals', initModals],
+      ['Auth', initAuthSystem],
+      ['Profile', initProfileSystem],
+      ['Group', initGroupCreationAndJoin],
+      ['Chat', initChatEvents],
+      ['GeoChalk', initGeoChalkSystem],
+      ['Forum', initForumEvents],
+      ['Vault', initVaultEvents],
+      ['Contacts', initContactsEvents],
+      ['NavRail', initNavRailEvents],
+      ['Preview', initPreviewEvents],
+      ['ReactionBar', initReactionBarEvents]
+    ];
+    tasks.forEach(([name, fn]) => {
+      try {
+        fn();
+      } catch (err) {
+        console.error(`[Init ${name} Error]:`, err);
+      }
+    });
 
-    loadRooms();
-    loadPosts();
-    loadDocuments();
-    loadUsers();
-
-    // Khởi tạo kết nối Real-time WebSocket và kiểm tra Deep Linking
-    initWebSocket();
-    checkDeepLinking();
+    try { loadRooms(); } catch (e) { console.error(e); }
+    try { loadPosts(); } catch (e) { console.error(e); }
+    try { loadDocuments(); } catch (e) { console.error(e); }
+    try { loadUsers(); } catch (e) { console.error(e); }
+    try { initWebSocket(); } catch (e) { console.error(e); }
+    try { startActiveRoomSync(); } catch (e) { console.error(e); }
+    try { checkDeepLinking(); } catch (e) { console.error(e); }
     window.addEventListener('popstate', checkDeepLinking);
 
     console.log('[*] EduShare Web App đã khởi chạy thành công!');

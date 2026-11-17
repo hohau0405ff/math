@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="style.css?v=20261105.300">
+  <link rel="stylesheet" href="style.css?v=2026.1">
 </head>
 <body class="theme-light">
   <div class="app-container" id="app-container">
@@ -764,7 +764,7 @@
   <!-- ==================== CÁC MODAL HỆ THỐNG CHUẨN ==================== -->
 
   <!-- 0. MODAL: KHO LƯU TRỮ & THÀNH VIÊN NHÓM ĐẦY ĐỦ (CỬA SỔ LỚN CHUẨN EDUSHARE PC) -->
-  <div class="modal-backdrop" id="modal-storage-repository">
+  <div class="modal-backdrop" style="display: none;" id="modal-storage-repository">
     <div class="modal-card modal-repository-card">
       <div class="modal-card-header">
         <div class="modal-title-with-icon">
@@ -794,7 +794,7 @@
   </div>
 
   <!-- 1. MODAL XÁC THỰC TÀI KHOẢN (ĐĂNG NHẬP / ĐĂNG KÝ / QUÊN MK) -->
-  <div class="modal-backdrop" id="modal-auth">
+  <div class="modal-backdrop" style="display: none;" id="modal-auth">
     <div class="modal-card modal-auth-card">
       <div class="modal-card-header">
         <div class="auth-header-title">
@@ -969,7 +969,7 @@
   </div>
 
   <!-- 2. MODAL TẠO NHÓM MỚI (MÃ NGẪU NHIÊN 16 KÝ TỰ) -->
-  <div class="modal-backdrop" id="modal-create-group">
+  <div class="modal-backdrop" style="display: none;" id="modal-create-group">
     <div class="modal-card">
       <div class="modal-card-header">
         <h3><i class="fa-solid fa-users-medical text-primary"></i> Tạo Nhóm Học Tập Mới</h3>
@@ -1036,7 +1036,7 @@
   </div>
 
   <!-- 3. MODAL THAM GIA BẰNG MÃ 16 KÝ TỰ -->
-  <div class="modal-backdrop" id="modal-join-group">
+  <div class="modal-backdrop" style="display: none;" id="modal-join-group">
     <div class="modal-card">
       <div class="modal-card-header">
         <h3><i class="fa-solid fa-key text-primary"></i> Tham Gia Nhóm Học Tập</h3>
@@ -1062,7 +1062,7 @@
   </div>
 
   <!-- 4. MODAL CHIA SẺ BÀI VIẾT (VÀO NHÓM HOẶC BẠN BÈ) -->
-  <div class="modal-backdrop" id="modal-share-post">
+  <div class="modal-backdrop" style="display: none;" id="modal-share-post">
     <div class="modal-card">
       <div class="modal-card-header">
         <h3><i class="fa-solid fa-share-nodes text-primary"></i> Chia Sẻ Bài Viết Diễn Đàn</h3>
@@ -1094,7 +1094,7 @@
   </div>
 
   <!-- 5. MODAL HỒ SƠ CÁ NHÂN & ĐỔI AVATAR (ĐỒNG BỘ TOÀN HỆ THỐNG) -->
-  <div class="modal-backdrop" id="modal-profile">
+  <div class="modal-backdrop" style="display: none;" id="modal-profile">
     <div class="modal-card">
       <div class="modal-card-header">
         <h3><i class="fa-solid fa-user-pen text-primary"></i> Hồ Sơ Cá Nhân & Ảnh Đại Diện</h3>
@@ -1157,7 +1157,7 @@
   </div>
 
   <!-- 6. MODAL CÀI ĐẶT GOOGLE DRIVE -->
-  <div class="modal-backdrop" id="modal-drive-config">
+  <div class="modal-backdrop" style="display: none;" id="modal-drive-config">
     <div class="modal-card">
       <div class="modal-card-header">
         <h3><i class="fa-brands fa-google-drive text-primary"></i> Cài Đặt Thư Mục Google Drive</h3>
@@ -1223,7 +1223,7 @@
   </div>
 
   <!-- 7. MODAL CHỌN THEME MÀU (3 THEME) -->
-  <div class="modal-backdrop" id="modal-theme-chooser">
+  <div class="modal-backdrop" style="display: none;" id="modal-theme-chooser">
     <div class="modal-card">
       <div class="modal-card-header">
         <h3><i class="fa-solid fa-palette text-primary"></i> Tùy Chọn Giao Diện Thiết Bị</h3>
@@ -1263,7 +1263,7 @@
   </div>
 
   <!-- 8. MODAL THÊM BẠN MỚI (SEARCH & MESSAGE) -->
-  <div class="modal-backdrop" id="modal-add-friend">
+  <div class="modal-backdrop" style="display: none;" id="modal-add-friend">
     <div class="modal-card">
       <div class="modal-card-header">
         <h3><i class="fa-solid fa-user-plus text-primary"></i> Thêm Bạn Bè Học Tập</h3>
@@ -1282,7 +1282,7 @@
   </div>
 
   <!-- 9. MODAL XEM TRƯỚC TÀI LIỆU / HÌNH ẢNH (LIGHTBOX) -->
-  <div class="modal-backdrop" id="modal-image-preview">
+  <div class="modal-backdrop" style="display: none;" id="modal-image-preview">
     <div class="modal-card modal-preview-card">
       <div class="modal-card-header">
         <h3 id="preview-modal-title"><i class="fa-regular fa-file-lines text-primary"></i> Xem Trước Tệp</h3>
@@ -1308,7 +1308,7 @@
   </div>
 
   <!-- 10. MODAL XEM HỒ SƠ & QUAN HỆ BẠN BÈ (PROFILE & FRIEND ACTIONS) -->
-  <div class="modal-backdrop" id="modal-user-profile-view">
+  <div class="modal-backdrop" style="display: none;" id="modal-user-profile-view">
     <div class="modal-card" style="max-width: 440px;">
       <div class="modal-card-header">
         <h3><i class="fa-solid fa-id-card text-primary"></i> Thông Tin Người Dùng</h3>
@@ -1330,7 +1330,7 @@
   </div>
 
   <!-- 11. MODAL CHIA SẺ TIN NHẮN (CHUẨN EDUSHARE PC NHƯ IMAGE 2) -->
-  <div class="modal-backdrop" id="modal-share-message">
+  <div class="modal-backdrop" style="display: none;" id="modal-share-message">
     <div class="modal-card modal-share-dialog" style="max-width: 580px; width: 95%;">
       <div class="modal-card-header">
         <h3 style="font-size: 16px; font-weight: 700; color: var(--text-color);">Chia sẻ</h3>
@@ -1400,7 +1400,7 @@
   </div>
 
   <!-- MODAL: KẾT NỐI & CHIA SẺ BẢNG VẼ GEOCHALK HÌNH HỌC -->
-  <div class="modal-backdrop" id="modal-geochalk">
+  <div class="modal-backdrop" style="display: none;" id="modal-geochalk">
     <div class="modal-card" style="max-width: 480px;">
       <div class="modal-card-header">
         <h3><i class="fa-solid fa-shapes text-primary"></i> Bảng Vẽ Hình Học GeoChalk</h3>
@@ -1444,7 +1444,7 @@
   </div>
 
   <!-- MODAL XEM CHI TIẾT BIỂU CẢM (REACTIONS LIST) -->
-  <div class="modal-backdrop" id="modal-message-reactions">
+  <div class="modal-backdrop" style="display: none;" id="modal-message-reactions">
     <div class="modal-card modal-reactions-card" style="max-width: 480px; width: 92%; border-radius: 12px; overflow: hidden;">
       <div class="modal-card-header" style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border-color);">
         <h3 style="font-size: 16px; font-weight: 700; color: var(--text-color); margin: 0;">Biểu cảm</h3>
@@ -1513,6 +1513,6 @@
   <div class="toast-container" id="toast-container"></div>
 
   <!-- JAVASCRIPT APP -->
-  <script src="app.js?v=20261105.300"></script>
+  <script src="app.js?v=2026.1"></script>
 </body>
 </html>

@@ -26,5 +26,5 @@ COPY . /app/
 # Mở cổng phục vụ ứng dụng
 EXPOSE 5500
 
-# Khởi chạy máy chủ FastAPI qua Uvicorn
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5500"]
+# Khởi chạy máy chủ FastAPI qua Uvicorn (kèm cờ --reload để tự động nhận code mới từ volume mount)
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5500", "--reload"]

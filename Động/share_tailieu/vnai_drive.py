@@ -74,6 +74,7 @@ def _build_multipart_payload(
     # 1. Phần filesMeta (JSON string, định dạng chuẩn form field giống curl)
     parts.append(f"--{boundary}".encode("utf-8"))
     parts.append(b'Content-Disposition: form-data; name="filesMeta"')
+    parts.append(b"Content-Type: application/json; charset=utf-8")
     parts.append(b"")
     parts.append(files_meta_json.encode("utf-8"))
 
@@ -172,7 +173,7 @@ def upload_to_vnai_drive(
         "fieldName": field_name,
         "fileName": filename,
         "mimeType": mime_type or "application/octet-stream",
-        "sizeBytes": len(file_bytes)
+        "sizeBytes": str(len(file_bytes))
     }
     if target_folder_id:
         file_meta_item["folderId"] = target_folder_id
@@ -194,11 +195,14 @@ def upload_to_vnai_drive(
     candidate_urls = []
     if _CACHED_UPLOAD_URL:
         candidate_urls.append(_CACHED_UPLOAD_URL)
+    clean_base = base_url.rstrip("/")
+    if clean_base.endswith("/api"):
+        endpoint_v1 = f"{clean_base}/v1/uploads"
+    else:
+        endpoint_v1 = f"{clean_base}/api/v1/uploads"
     candidate_urls.extend([
-        "https://drive.vn-ai.cloud/api/v1/uploads",
-        f"{base_url}/v1/uploads",
-        "https://drive.vn-ai.cloud/api/api/v1/uploads",
-        f"{base_url}/api/v1/uploads"
+        endpoint_v1,
+        "https://drive.vn-ai.cloud/api/v1/uploads"
     ])
     # Loại bỏ URL trùng lặp nhưng giữ nguyên thứ tự
     seen = set()

@@ -37,7 +37,7 @@ if hasattr(sys.stderr, 'reconfigure'):
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks, status, Query, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, HTTPException, BackgroundTasks, status, Query, WebSocket, WebSocketDisconnect, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse, Response, StreamingResponse
@@ -480,6 +480,8 @@ GEOCHALK_URL = os.environ.get("GEOCHALK_URL", "https://math.vn-ai.cloud/geochalk
 def get_drive_sync_url():
     global GOOGLE_DRIVE_WEBAPP_URL
     if GOOGLE_DRIVE_WEBAPP_URL:
+        if "AKfycb_sample_test" in GOOGLE_DRIVE_WEBAPP_URL:
+            return ""
         return GOOGLE_DRIVE_WEBAPP_URL
     try:
         if os.path.exists(".env"):
@@ -487,7 +489,7 @@ def get_drive_sync_url():
                 for line in f:
                     if line.startswith("GOOGLE_DRIVE_WEBAPP_URL="):
                         val = line.split("=", 1)[1].strip()
-                        if val:
+                        if val and "AKfycb_sample_test" not in val:
                             GOOGLE_DRIVE_WEBAPP_URL = val
                             return val
     except Exception:
@@ -578,6 +580,24 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.middleware("http")
+async def add_no_cache_headers(request: Request, call_next):
+    """
+    Vô hiệu hóa triệt để browser cache đối với file HTML, JS, CSS và toàn bộ API.
+    Người dùng không bao giờ bị dính cache cũ hoặc phải bấm Ctrl+F5 mới thấy cập nhật.
+    """
+    response = await call_next(request)
+    path = request.url.path.lower()
+    if (
+        path.endswith((".js", ".css", ".html", ".json")) or
+        path in ["/", "/index.html", "/feed"] or
+        path.startswith("/api/")
+    ):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
 # ==================== WEBSOCKET REALTIME CONNECTION MANAGER ====================
 class ConnectionManager:
     """
@@ -619,10 +639,24 @@ class ConnectionManager:
                 self.user_connections[email].discard(websocket)
                 if not self.user_connections[email]:
                     del self.user_connections[email]
+        # Dọn sạch toàn bộ room_connections chứa socket này
         for r_id in list(self.room_connections.keys()):
             self.room_connections[r_id].discard(websocket)
             if not self.room_connections[r_id]:
                 del self.room_connections[r_id]
+        # Dọn sạch toàn bộ user_connections chứa socket này
+        for u_e in list(self.user_connections.keys()):
+            self.user_connections[u_e].discard(websocket)
+            if not self.user_connections[u_e]:
+                del self.user_connections[u_e]
+
+    def set_user_email(self, websocket: WebSocket, user_email: str):
+        if not user_email:
+            return
+        email = user_email.strip().lower()
+        if email not in self.user_connections:
+            self.user_connections[email] = set()
+        self.user_connections[email].add(websocket)
 
     def switch_room(self, websocket: WebSocket, old_room_id: Optional[str], new_room_id: str):
         if old_room_id and old_room_id in self.room_connections:
@@ -633,6 +667,53 @@ class ConnectionManager:
             if new_room_id not in self.room_connections:
                 self.room_connections[new_room_id] = set()
             self.room_connections[new_room_id].add(websocket)
+
+    async def broadcast_chat_message(
+        self,
+        room_id: str,
+        room_type: str,
+        member_emails: list,
+        data: dict,
+        exclude: Optional[WebSocket] = None
+    ):
+        """
+        Phát sóng tin nhắn tới 100% người nhận mục tiêu mà không bao giờ bị trùng lặp hay sót:
+        1. Tất cả client đang mở phòng này (self.room_connections[room_id])
+        2. Tất cả thành viên trong nhóm theo email (self.user_connections[email])
+        3. Nếu là phòng cộng đồng (community): phát tới TOÀN BỘ client đang kết nối (self.all_connections)
+        """
+        target_sockets: Set[WebSocket] = set()
+
+        # 1. Các socket đang đứng trong phòng
+        if room_id in self.room_connections:
+            target_sockets.update(self.room_connections[room_id])
+
+        # 2. Các socket của thành viên phòng
+        if member_emails:
+            for e in member_emails:
+                e_clean = (e or "").strip().lower()
+                if e_clean in self.user_connections:
+                    target_sockets.update(self.user_connections[e_clean])
+
+        # 3. Phòng cộng đồng chung toàn trường -> tất cả mọi người online
+        if room_type == "community" or room_id == "room_community":
+            target_sockets.update(self.all_connections)
+
+        dead = set()
+        for ws in target_sockets:
+            if ws == exclude:
+                continue
+            try:
+                await ws.send_json(data)
+            except Exception:
+                dead.add(ws)
+
+        for ws in dead:
+            self.all_connections.discard(ws)
+            if room_id in self.room_connections:
+                self.room_connections[room_id].discard(ws)
+            for u_e in list(self.user_connections.keys()):
+                self.user_connections[u_e].discard(ws)
 
     async def broadcast_to_room(self, room_id: str, data: dict, exclude: Optional[WebSocket] = None):
         if room_id in self.room_connections:
@@ -647,6 +728,26 @@ class ConnectionManager:
             for ws in dead:
                 self.room_connections[room_id].discard(ws)
                 self.all_connections.discard(ws)
+
+    async def broadcast_to_users(self, emails: list, data: dict, exclude: Optional[WebSocket] = None):
+        """Phát tin nhắn thời gian thực tới các tài khoản cụ thể (dù họ đang ở phòng khác)"""
+        if not emails:
+            return
+        dead = []
+        for e in emails:
+            e_clean = (e or "").strip().lower()
+            if e_clean in self.user_connections:
+                for ws in list(self.user_connections[e_clean]):
+                    if ws == exclude:
+                        continue
+                    try:
+                        await ws.send_json(data)
+                    except Exception:
+                        dead.append((e_clean, ws))
+        for e_clean, ws in dead:
+            if e_clean in self.user_connections:
+                self.user_connections[e_clean].discard(ws)
+            self.all_connections.discard(ws)
 
     async def broadcast_to_all(self, data: dict):
         dead = set()
@@ -675,10 +776,20 @@ async def websocket_endpoint(
             msg_type = data.get("type") or data.get("action")
             if msg_type == "join_room":
                 new_room = data.get("room_id")
+                new_email = data.get("user_email") or data.get("email")
+                if new_email:
+                    current_email = new_email.strip().lower()
+                    ws_manager.set_user_email(websocket, current_email)
                 if new_room:
                     ws_manager.switch_room(websocket, current_room, new_room)
                     current_room = new_room
                     await websocket.send_json({"type": "room_joined", "room_id": new_room})
+            elif msg_type in ["set_user", "update_user"]:
+                new_email = data.get("user_email") or data.get("email")
+                if new_email:
+                    current_email = new_email.strip().lower()
+                    ws_manager.set_user_email(websocket, current_email)
+                    await websocket.send_json({"type": "user_updated", "user_email": current_email})
             elif msg_type == "leave_room":
                 if current_room and current_room in ws_manager.room_connections:
                     ws_manager.room_connections[current_room].discard(websocket)
@@ -841,6 +952,10 @@ class DocumentCreate(BaseModel):
     room_id: Optional[str] = ""
 
 # ==================== 5. REST API ENDPOINTS ====================
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return Response(status_code=204)
 
 @app.get("/api/health")
 def health_check():
@@ -1188,7 +1303,7 @@ def get_all_users():
         db.close()
 
 @app.put("/api/users/profile")
-def update_profile(req: ProfileUpdateRequest):
+async def update_profile(req: ProfileUpdateRequest):
     email = req.email.strip().lower()
     db = SessionLocal()
     try:
@@ -1217,13 +1332,13 @@ def update_profile(req: ProfileUpdateRequest):
             DBDocument.uploader_name: user.name
         })
 
-        # Cập nhật trong comments_json của các bài viết
-        all_posts = db.query(DBPost).all()
-        for p in all_posts:
+        # Cập nhật trong comments_json của các bài viết có bình luận của user này
+        posts_with_comments = db.query(DBPost).filter(DBPost.comments_json.like(f"%{email}%")).all()
+        for p in posts_with_comments:
             cmts = json.loads(p.comments_json or "[]")
             modified = False
             for c in cmts:
-                if c.get("author_email") == email:
+                if (c.get("author_email") or "").lower() == email:
                     c["author_name"] = user.name
                     c["avatar"] = user.avatar
                     modified = True
@@ -1231,12 +1346,12 @@ def update_profile(req: ProfileUpdateRequest):
                 p.comments_json = json.dumps(cmts)
 
         # Cập nhật danh sách thành viên trong tất cả các nhóm & cập nhật tên phòng chat riêng
-        all_rooms = db.query(DBRoom).all()
-        for r in all_rooms:
+        rooms_with_member = db.query(DBRoom).filter(DBRoom.members_json.like(f"%{email}%")).all()
+        for r in rooms_with_member:
             r_modified = False
             members = json.loads(r.members_json or "[]")
             for m in members:
-                if m.get("email", "").lower() == email:
+                if (m.get("email") or "").lower() == email:
                     m["name"] = user.name
                     m["avatar"] = user.avatar
                     if user.sub_info:
@@ -1247,9 +1362,9 @@ def update_profile(req: ProfileUpdateRequest):
 
             # Nếu là phòng chat riêng 1-1, cập nhật lại tên phòng kết hợp cả 2 bên
             if r.type == "direct" and email in (r.id or ""):
-                other_m = next((m for m in members if m.get("email", "").lower() != email), None)
+                other_m = next((m for m in members if (m.get("email") or "").lower() != email), None)
                 if other_m:
-                    other_u = db.query(DBUser).filter(DBUser.email == other_m.get("email", "").lower()).first()
+                    other_u = db.query(DBUser).filter(DBUser.email == (other_m.get("email") or "").lower()).first()
                     other_name = other_u.name if other_u else other_m.get("email")
                     r.name = f"{user.name} & {other_name}"
 
@@ -1262,20 +1377,30 @@ def update_profile(req: ProfileUpdateRequest):
         cache_delete("posts:all")
         cache_delete("users:all")
 
-        db.commit()
+        user_data = {
+            "id": user.id,
+            "email": user.email,
+            "name": user.name,
+            "role": user.role,
+            "isSystemAdmin": bool(user.is_system_admin),
+            "roleTitle": user.role_title,
+            "subInfo": user.sub_info,
+            "avatar": user.avatar
+        }
+
+        # Phát thông báo WebSocket thời gian thực tới tất cả các client đang online
+        try:
+            await ws_manager.broadcast_to_all({
+                "type": "user_profile_updated",
+                "user": user_data
+            })
+        except Exception as ws_err:
+            print(f"[WS Profile Broadcast Warn]: {ws_err}")
+
         return {
             "status": "success",
             "message": "Đã cập nhật hồ sơ và đồng bộ avatar toàn hệ thống!",
-            "user": {
-                "id": user.id,
-                "email": user.email,
-                "name": user.name,
-                "role": user.role,
-                "isSystemAdmin": bool(user.is_system_admin),
-                "roleTitle": user.role_title,
-                "subInfo": user.sub_info,
-                "avatar": user.avatar
-            }
+            "user": user_data
         }
     finally:
         db.close()
@@ -1804,11 +1929,18 @@ async def recall_message(message_id: str, user_email: str = Query(...)):
 
         # Broadcast realtime sự kiện thu hồi tin nhắn đến tất cả thành viên trong phòng
         try:
-            await ws_manager.broadcast_to_room(msg.room_id, {
-                "type": "message_recalled",
-                "room_id": msg.room_id,
-                "message_id": message_id
-            })
+            room_members = json.loads(room.members_json or "[]") if room else []
+            target_member_emails = [m.get("email", "").strip().lower() for m in room_members if m.get("email")]
+            await ws_manager.broadcast_chat_message(
+                room_id=msg.room_id,
+                room_type=room.type if room else "",
+                member_emails=target_member_emails,
+                data={
+                    "type": "message_recalled",
+                    "room_id": msg.room_id,
+                    "message_id": message_id
+                }
+            )
         except Exception as ws_ex:
             print(f"[WS Recall Broadcast Error]: {ws_ex}")
 
@@ -1934,12 +2066,20 @@ async def react_to_message(message_id: str, req: MessageReactionRequest):
 
         # Broadcast realtime sự kiện cập nhật biểu cảm đến tất cả thành viên trong phòng
         try:
-            await ws_manager.broadcast_to_room(msg.room_id, {
-                "type": "reaction_updated",
-                "room_id": msg.room_id,
-                "message_id": message_id,
-                "reactions": reactions
-            })
+            room = db.query(DBRoom).filter(DBRoom.id == msg.room_id).first()
+            room_members = json.loads(room.members_json or "[]") if room else []
+            target_member_emails = [m.get("email", "").strip().lower() for m in room_members if m.get("email")]
+            await ws_manager.broadcast_chat_message(
+                room_id=msg.room_id,
+                room_type=room.type if room else "",
+                member_emails=target_member_emails,
+                data={
+                    "type": "reaction_updated",
+                    "room_id": msg.room_id,
+                    "message_id": message_id,
+                    "reactions": reactions
+                }
+            )
         except Exception as ws_ex:
             print(f"[WS Reaction Broadcast Error]: {ws_ex}")
 
@@ -2164,11 +2304,22 @@ async def send_message(room_id: str, req: SendMessageRequest):
                 "reactions": [],
                 "created_at": to_iso_utc(new_msg.created_at)
             }
-            await ws_manager.broadcast_to_room(room_id, {
-                "type": "new_message",
-                "room_id": room_id,
-                "message": msg_payload
-            })
+            room_members = json.loads(room.members_json or "[]")
+            target_member_emails = [m.get("email", "").strip().lower() for m in room_members if m.get("email")]
+            # Thêm người gửi vào danh sách thành viên nếu chưa có
+            if email and email not in target_member_emails:
+                target_member_emails.append(email)
+
+            await ws_manager.broadcast_chat_message(
+                room_id=room_id,
+                room_type=room.type or "",
+                member_emails=target_member_emails,
+                data={
+                    "type": "new_message",
+                    "room_id": room_id,
+                    "message": msg_payload
+                }
+            )
         except Exception as ws_ex:
             print(f"[WS Send Message Broadcast Error]: {ws_ex}")
 
@@ -3481,7 +3632,7 @@ def cleanup_expired_files(days: int = 60):
 
         # 3. Đồng bộ dọn dẹp Google Drive nếu có cấu hình
         url = get_drive_sync_url()
-        if url and "script.google.com" in url:
+        if url and "script.google.com" in url and "AKfycb_sample_test" not in url:
             try:
                 import urllib.request
                 payload = json.dumps({"action": "clean_old_files"}).encode("utf-8")

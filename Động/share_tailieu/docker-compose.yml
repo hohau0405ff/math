@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # 1. DỊCH VỤ REDIS CACHE (Lưu mã OTP 10 phút, phiên làm việc)
   redis:
