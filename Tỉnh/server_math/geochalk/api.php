@@ -198,14 +198,21 @@ if ($endpoint === '/api/auth/login' && $method === 'POST') {
     }
 
     // Danh sách URL máy chủ EduShare (Server 2):
-    // Ưu tiên biến môi trường > customAuthUrl > IP nội bộ 192.168.1.240:5500 > tên miền EduShare
+    // Ưu tiên biến môi trường > customAuthUrl (chỉ nhận host an toàn) > IP nội bộ 192.168.1.240:5500 > tên miền EduShare
     $candidateUrls = [];
     $envUrl = getenv('EDUSHARE_AUTH_URL');
     if (!empty($envUrl)) {
         $candidateUrls[] = $envUrl;
     }
+    // Chỉ chấp nhận customAuthUrl nếu thuộc whitelist host an toàn và trỏ tới /api/login (chống SSRF & đánh cắp mật khẩu)
     if (!empty($customAuthUrl)) {
-        $candidateUrls[] = $customAuthUrl;
+        $parsed = parse_url($customAuthUrl);
+        $host = strtolower($parsed['host'] ?? '');
+        $path = $parsed['path'] ?? '';
+        $allowedHosts = ['edushare.vn-ai.cloud', 'math.vn-ai.cloud', '192.168.1.240', 'localhost', '127.0.0.1'];
+        if (in_array($host, $allowedHosts, true) && str_ends_with($path, '/api/login')) {
+            $candidateUrls[] = $customAuthUrl;
+        }
     }
     $candidateUrls[] = 'http://192.168.1.240:5500/api/login';
     $candidateUrls[] = 'https://edushare.vn-ai.cloud/api/login';
@@ -232,8 +239,8 @@ if ($endpoint === '/api/auth/login' && $method === 'POST') {
         ]);
         curl_setopt($ch, CURLOPT_TIMEOUT, 6);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
 
         $res = curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);

@@ -5,7 +5,7 @@ services:
     container_name: edushare-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
 
@@ -18,15 +18,17 @@ services:
     restart: unless-stopped
     ports:
       - "5500:5500"
+    env_file:
+      - .env
     environment:
       - PORT=5500
       - DATABASE_URL=sqlite:///./edushare.db
       - REDIS_URL=redis://redis:6379/0
-      - SMTP_HOST=smtp.gmail.com
-      - SMTP_PORT=465
-      - SMTP_USER=hotrantrunghau951842@gmail.com
-      - SMTP_PASS=qtfzemasubiterqv
-      - FROM_NAME=Ban Quản Trị EduShare
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-465}
+      - SMTP_USER=${SMTP_USER:-hotrantrunghau951842@gmail.com}
+      - SMTP_PASS=${SMTP_PASS}
+      - FROM_NAME=${FROM_NAME:-Ban Quản Trị EduShare}
     depends_on:
       - redis
     volumes:

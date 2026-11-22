@@ -12,9 +12,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     DATABASE_URL=sqlite:///./edushare.db \
     REDIS_URL=redis://redis:6379/0 \
     SMTP_HOST=smtp.gmail.com \
-    SMTP_PORT=465 \
-    SMTP_USER=hotrantrunghau951842@gmail.com \
-    SMTP_PASS=qtfzemasubiterqv
+    SMTP_PORT=465
 
 # Cài đặt các gói phụ thuộc
 COPY requirements.txt /app/
