@@ -198,19 +198,23 @@ if ($endpoint === '/api/auth/login' && $method === 'POST') {
     }
 
     // Danh sách URL máy chủ EduShare (Server 2):
-    // Ưu tiên biến môi trường > customAuthUrl (chỉ nhận host an toàn) > IP nội bộ 192.168.1.240:5500 > tên miền EduShare
+    // Ưu tiên biến môi trường > customAuthUrl (đã qua whitelist kiểm duyệt) > IP nội bộ 192.168.1.240:5500 > tên miền EduShare
     $candidateUrls = [];
     $envUrl = getenv('EDUSHARE_AUTH_URL');
     if (!empty($envUrl)) {
         $candidateUrls[] = $envUrl;
     }
-    // Chỉ chấp nhận customAuthUrl nếu thuộc whitelist host an toàn và trỏ tới /api/login (chống SSRF & đánh cắp mật khẩu)
+
+    // Kiểm tra và lọc an toàn customAuthUrl chống SSRF (Vá Lỗ hổng 6)
     if (!empty($customAuthUrl)) {
         $parsed = parse_url($customAuthUrl);
         $host = strtolower($parsed['host'] ?? '');
-        $path = $parsed['path'] ?? '';
-        $allowedHosts = ['edushare.vn-ai.cloud', 'math.vn-ai.cloud', '192.168.1.240', 'localhost', '127.0.0.1'];
-        if (in_array($host, $allowedHosts, true) && str_ends_with($path, '/api/login')) {
+        $scheme = strtolower($parsed['scheme'] ?? '');
+        $allowedHosts = ['edushare.vn-ai.cloud', 'math.vn-ai.cloud', 'localhost', '127.0.0.1', '192.168.1.240'];
+        $isHostAllowed = in_array($host, $allowedHosts) || (strlen($host) > 12 && substr($host, -12) === '.vn-ai.cloud');
+        $isSchemeAllowed = in_array($scheme, ['http', 'https']);
+
+        if ($isHostAllowed && $isSchemeAllowed) {
             $candidateUrls[] = $customAuthUrl;
         }
     }
@@ -239,8 +243,17 @@ if ($endpoint === '/api/auth/login' && $method === 'POST') {
         ]);
         curl_setopt($ch, CURLOPT_TIMEOUT, 6);
         curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+
+        // Bật xác thực SSL nghiêm ngặt cho tên miền ngoài / HTTPS, chỉ nới lỏng cho IP cục bộ nội bộ (Vá Lỗ hổng 6)
+        $parsedHost = parse_url($url, PHP_URL_HOST);
+        $isLocal = in_array($parsedHost, ['localhost', '127.0.0.1', '192.168.1.240']);
+        if ($isLocal) {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+        } else {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        }
 
         $res = curl_exec($ch);
         $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);

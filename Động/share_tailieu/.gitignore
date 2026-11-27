@@ -1,8 +1,8 @@
 .env
-*.db
-*.sqlite
-*.sqlite3
 __pycache__/
 *.pyc
 .claude/
 node_modules/
+*.db
+*.sqlite
+*.sqlite3

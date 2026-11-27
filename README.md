@@ -1,115 +1,115 @@
-# 📐 Math Hub & EduShare - Nền Tảng Học Liệu & Công Cụ Toán Học Toàn Diện
+# 📐 Math Hub & EduShare - Hệ Sinh Thái Học Liệu & Công Cụ Toán Học Toàn Diện
 
 <p align="center">
   <img src="https://img.shields.io/badge/Trạng_thái-Hoạt_động_100%25-brightgreen?style=for-the-badge" alt="Status">
-  <img src="https://img.shields.io/badge/Phiên_bản-v2.5_Stable-blue?style=for-the-badge" alt="Version">
-  <img src="https://img.shields.io/badge/Nền_tảng-Web_%7C_PWA_%7C_Mobile-orange?style=for-the-badge" alt="Platform">
-  <img src="https://img.shields.io/badge/Giấy_phép-MIT_License-green?style=for-the-badge" alt="License">
+  <img src="https://img.shields.io/badge/Phiên_bản-v2.6_Stable-blue?style=for-the-badge" alt="Version">
+  <img src="https://img.shields.io/badge/Nền_tảng-Web_%7C_PWA_%7C_Docker-orange?style=for-the-badge" alt="Platform">
+  <img src="https://img.shields.io/badge/Bảo_mật-PBKDF2_HMAC_SHA256-darkgreen?style=for-the-badge" alt="Security">
 </p>
 
 <p align="center">
-  <b>Hệ sinh thái tích hợp công cụ dựng hình học trực quan, máy tính khoa học giả lập, ngân hàng đề thi và tài liệu Toán học từ cơ bản đến nâng cao.</b>
+  <b>Nền tảng tích hợp công cụ dựng hình học tương tác, máy tính khoa học giả lập PWA, ngân hàng đề thi và kho học liệu Toán học từ cơ bản đến nâng cao.</b>
 </p>
 
 <p align="center">
-  👉 <b>Cổng chính:</b> <a href="https://math.vn-ai.cloud/"><b>https://math.vn-ai.cloud/</b></a>
+  👉 <b>Cổng chính Math Hub:</b> <a href="https://math.vn-ai.cloud/"><b>https://math.vn-ai.cloud/</b></a> &nbsp;|&nbsp; 👉 <b>Nền tảng EduShare:</b> <a href="https://edushare.vn-ai.cloud/"><b>https://edushare.vn-ai.cloud/</b></a>
 </p>
 
 ---
 
 ## 📌 Mục Lục
 
-- [1. Bảng Điều Hướng & Đường Dẫn Trang Con](#-1-bảng-điều-hướng--đường-dẫn-trang-con)
-- [2. Sơ Đồ Kiến Trúc Hệ Thống](#-2-sơ-đồ-kiến-trúc-hệ-thống)
-- [3. Chi Tiết Từng Phân Hệ Chức Năng](#-3-chi-tiết-từng-phân-hệ-chức-năng)
-  - [3.1. GeoChalk - Bảng Kỹ Thuật Tương Tác](#31-geochalk---bảng-kỹ-thuật-tương-tác)
-  - [3.2. SMT - Giả Lập Máy Tính Cầm Tay PWA](#32-smt---giả-lập-máy-tính-cầm-tay-pwa)
-  - [3.3. Hình Học Phẳng 2D](#33-hình-học-phẳng-2d)
-  - [3.4. Tài Liệu & Sổ Tay Công Thức THPT](#34-tài-liệu--sổ-tay-công-thức-thpt)
-  - [3.5. EduShare - Kho Học Liệu & Thảo Luận](#35-edushare---kho-học-liệu--thảo-luận)
+- [1. Giới Thiệu Dự Án](#-1-giới-thiệu-dự-án)
+- [2. Tính Năng Chính](#-2-tính-năng-chính)
+  - [2.1. Math Hub Portal](#21-math-hub-portal)
+  - [2.2. GeoChalk - Bảng Kỹ Thuật Tương Tác (3D, 2D, CAS, Graphing)](#22-geochalk---bảng-kỹ-thuật-tương-tác-3d-2d-cas-graphing)
+  - [2.3. SMT Calculator - Giả Lập Máy Tính Khoa Học PWA](#23-smt-calculator---giả-lập-máy-tính-khoa-học-pwa)
+  - [2.4. EduShare - Kho Học Liệu, Đề Thi & Diễn Đàn Học Tập](#24-edushare---kho-học-liệu-đề-thi--diễn-đàn-học-tập)
+  - [2.5. Phòng Học & Trò Chuyện Trực Tuyến Thời Gian Thực](#25-phòng-học--trò-chuyện-trực-tuyến-thời-gian-thực)
+- [3. Công Nghệ Sử Dụng (Tech Stack) & Kiến Trúc](#-3-công-nghệ-sử-dụng-tech-stack--kiến-trúc)
 - [4. Cấu Trúc Thư Mục Dự Án](#-4-cấu-trúc-thư-mục-dự-án)
-- [5. Hướng Dẫn Cài Đặt & Triển Khai (Self-Host)](#-5-hướng-dẫn-cài-đặt--triển-khai-self-host)
-- [6. Cấu Hình Biến Môi Trường (.env)](#-6-cấu-hình-biến-môi-trường-env)
-- [7. Kế Hoạch Nâng Cấp (Roadmap)](#-7-kế-hoạch-nâng-cấp-roadmap)
+- [5. Tính Năng Bảo Mật Hiện Có (Security Features)](#-5-tính-năng-bảo-mật-hiện-có-security-features)
+- [6. Hướng Dẫn Cài Đặt & Khởi Chạy](#-6-hướng-dẫn-cài-đặt--khởi-chạy)
+  - [6.1. Triển khai bằng Docker Compose (Khuyến nghị)](#61-triển-khai-bằng-docker-compose-khuyến-nghị)
+  - [6.2. Triển khai thủ công (Manual Setup)](#62-triển-khai-thủ-công-manual-setup)
+  - [6.3. Cấu hình Nginx Reverse Proxy](#63-cấu-hình-nginx-reverse-proxy)
+- [7. Biến Môi Trường (.env)](#-7-biến-môi-trường-env)
+- [8. Thông Tin Tác Giả & Đóng Góp](#-8-thông-tin-tác-giả--đóng-góp)
 
 ---
 
-## ⚡ 1. Bảng Điều Hướng & Đường Dẫn Trang Con
+## 🌐 1. Giới Thiệu Dự Án
 
-Toàn bộ các phân hệ đã được cấu hình và vận hành độc lập trên máy chủ đám mây:
-
-| # | Phân Hệ / Công Cụ | Đường Dẫn Trực Tiếp | Mô Tả Chức Năng Chính | Công Nghệ Lõi |
-| :-: | :--- | :--- | :--- | :--- |
-| **0** | **🌐 Math Hub Portal** | [math.vn-ai.cloud](https://math.vn-ai.cloud/) | Cổng điều hướng tập trung vào tất cả các phân hệ Toán học | HTML5, CSS3, JS Vanilla |
-| **1** | **🧊 GeoChalk (3D & 2D)** | [math.vn-ai.cloud/geochalk/geochalk.html](https://math.vn-ai.cloud/geochalk/geochalk.html) | Bảng vẽ kỹ thuật: Hình không gian $Oxyz$, Hình học phẳng, Khảo sát đồ thị, Đại số máy tính (CAS) | GeoGebra 5.0 Core, WebGL, LocalStorage AutoSave |
-| **2** | **🔢 SMT Calculator** | [math.vn-ai.cloud/smt/index.html](https://math.vn-ai.cloud/smt/index.html) | Giả lập máy tính khoa học bỏ túi (Casio / Vinacal 680EX) đầy đủ tính năng giải PT, ma trận, số phức | PWA, JavaScript Canvas, MathEngine |
-| **3** | **📐 Hình Học 2D** | [math.vn-ai.cloud/toan/hh2D.html](https://math.vn-ai.cloud/toan/hh2D.html) | Bảng vẽ minh họa định lý hình học phẳng nhanh, đo góc, diện tích và dựng tiếp tuyến | Canvas API, GeoGebra 2D Engine |
-| **4** | **📖 Tài Liệu Tổng Hợp** | [math.vn-ai.cloud/toan/tailieutonghop.html](https://math.vn-ai.cloud/toan/tailieutonghop.html) | Tra cứu nhanh định lý, bảng công thức Toán THPT (Lớp 10, 11, 12), kho tệp PDF phân loại | Responsive Reader, PDF.js |
-| **5** | **📚 EduShare Platform** | [edushare.vn-ai.cloud](https://edushare.vn-ai.cloud/) | Cổng lưu trữ tài liệu, ngân hàng đề thi thử, diễn đàn hỏi đáp và trao đổi học tập | Python FastAPI, SQLite, Cloud Drive API |
+**Math Hub & EduShare** là hệ sinh thái giáo dục số toàn diện, kết hợp chặt chẽ giữa các công cụ tính toán, vẽ hình trực quan và nền tảng cộng đồng chia sẻ tri thức:
+- **Math Hub**: Đóng vai trò là cổng công cụ tương tác, cung cấp bộ bảng vẽ hình học không gian 3D, hình học phẳng 2D, đồ thị hàm số, đại số máy tính (CAS) và máy tính khoa học PWA hoạt động mượt mà trên cả máy tính lẫn thiết bị di động.
+- **EduShare**: Là trung tâm cộng tác học tập, cho phép học sinh và giáo viên chia sẻ đề thi, tài liệu ôn luyện theo từng khối lớp (Lớp 10, 11, 12, Luyện thi THPT Quốc gia), trao đổi thảo luận qua diễn đàn và phòng học trực tuyến thời gian thực.
 
 ---
 
-## 🏛️ 2. Sơ Đồ Kiến Trúc Hệ Thống
+## ⚡ 2. Tính Năng Chính
 
-Hệ thống được thiết kế theo mô hình **Tách biệt Máy chủ Tĩnh (Static Server) & Máy chủ Dịch vụ Động (Dynamic API Backend)** giúp chịu tải cao và tối ưu độ trễ:
+### 2.1. Math Hub Portal
+- Giao diện điều hướng tập trung, kết nối nhanh chóng đến các phân hệ công cụ và học liệu.
+- Thiết kế hiện đại, hỗ trợ Responsive hoàn hảo trên máy tính để bàn, máy tính bảng và điện thoại di động.
 
+### 2.2. GeoChalk - Bảng Kỹ Thuật Tương Tác (3D, 2D, CAS, Graphing)
+- **Hình Không Gian 3D ($Oxyz$):** Dựng mặt phẳng tọa độ, đa diện, hình nón, trụ, cầu, góc và khoảng cách trong không gian 3 chiều với khả năng xoay tự do và đổ bóng thực tế.
+- **Hình Học Phẳng 2D:** Dựng hình học Euclid, đường tròn nội/ngoại tiếp, giao điểm, phép biến hình (đối xứng, vị tự, tịnh tiến).
+- **Khảo Sát Đồ Thị (Graphing):** Vẽ đồ thị đa thức, hàm hữu tỉ, lượng giác, xác định cực trị, điểm uốn và tính diện tích hình phẳng tích phân.
+- **Đại Số Máy Tính (CAS):** Giải phương trình, hệ phương trình, tính đạo hàm, nguyên hàm, tích phân và rút gọn biểu thức tượng trưng.
+- **Tính năng mở rộng:** Tự động lưu bản vẽ vào LocalStorage và lưu trữ dự án lên máy chủ đám mây, tích hợp đăng nhập đồng bộ từ EduShare.
+
+### 2.3. SMT Calculator - Giả Lập Máy Tính Khoa Học PWA
+- Tái lập đầy đủ các thuật toán và bố cục của các dòng máy tính cầm tay tiên tiến (Casio fx-580VN X / Vinacal 680EX).
+- Hỗ trợ giải phương trình bậc 4, hệ 4 ẩn, ma trận cấp $4 \times 4$, số phức, phân phối xác suất thống kê và vector không gian.
+- Chuẩn Progressive Web App (PWA): Hỗ trợ cài đặt trực tiếp về màn hình chính thiết bị và vận hành ngoại tuyến (Offline Mode).
+
+### 2.4. EduShare - Kho Học Liệu, Đề Thi & Diễn Đàn Học Tập
+- **Kho Tài Liệu Đa Dạng:** Phân loại theo khối lớp, chuyên đề toán học và năm học với bộ lọc tìm kiếm thông minh.
+- **Trình Đọc Tài Liệu Trực Tuyến:** Tích hợp bộ xem trước tài liệu đa định dạng (PDF, DOCX, Hình ảnh) trực tiếp trên trình duyệt.
+- **Đồng Bộ Đám Mây:** Kết nối linh hoạt với Google Drive và Cloud Drive API để sao lưu và chia sẻ file dung lượng lớn.
+- **Hệ Thống Diễn Đàn:** Tạo bài viết, bình luận, tương tác hỏi đáp giữa giáo viên và học sinh.
+
+### 2.5. Phòng Học & Trò Chuyện Trực Tuyến Thời Gian Thực
+- Nhóm học tập theo chuyên đề với khả năng thảo luận qua WebSocket tốc độ cao.
+- Trò chuyện trực tiếp 1-1 và trò chuyện nhóm, hỗ trợ gửi tệp đính kèm học tập, hình ảnh và công thức Toán học.
+
+---
+
+## 🛠️ 3. Công Nghệ Sử Dụng (Tech Stack) & Kiến Trúc
+
+### Sơ Đồ Kiến Trúc Hệ Thống:
 ```text
-                               ┌────────────────────────────────────────┐
-                               │       Người Dùng (Browser / PWA)       │
-                               └──────────────────┬─────────────────────┘
-                                                  │
-                                                  ▼
-                        ┌─────────────────────────────────────────────────────┐
-                        │             Reverse Proxy Nginx / SSL               │
-                        │           (math.vn-ai.cloud & edushare)             │
-                        └───────────────┬─────────────────────┬───────────────┘
-                                        │                     │
-                    [Tài nguyên Tĩnh]   │                     │   [Yêu cầu Động / API]
-                                        ▼                     ▼
-              ┌──────────────────────────────────┐   ┌──────────────────────────────────┐
-              │     Server 1: Static Web Hub     │   │    Server 2: Dynamic Backend     │
-              ├──────────────────────────────────┤   ├──────────────────────────────────┤
-              │ • index.html (Portal)            │   │ • EduShare API (FastAPI - :5500) │
-              │ • /smt/ (Giả lập Vinacal PWA)    │   │ • GeoChalk API (PHP-FPM SQLite)  │
-              │ • /toan/ (hh2D.html, tài liệu)   │   │ • SQLite Database Engine         │
-              │ • /geochalk/ (GeoGebra HTML5 JS) │   │ • Cloud Sync (Google / VNAI)     │
-              └──────────────────────────────────┘   └──────────────────────────────────┘
+                          ┌────────────────────────────────────┐
+                          │     Người Dùng (Web / PWA / App)   │
+                          └─────────────────┬──────────────────┘
+                                            │ HTTPS / WSS
+                                            ▼
+                  ┌──────────────────────────────────────────────────┐
+                  │            Nginx Reverse Proxy & SSL             │
+                  │        (math.vn-ai.cloud & edushare)             │
+                  └─────────────┬──────────────────────┬─────────────┘
+                                │                      │
+                 [Static Files] │                      │ [API / WebSocket]
+                                ▼                      ▼
+             ┌─────────────────────────────┐   ┌─────────────────────────────┐
+             │    Static Web Server Hub    │   │  EduShare FastAPI Service   │
+             │                             │   │                             │
+             │ • Portal (index.html)       │   │ • RESTful API (Python 3.10) │
+             │ • SMT Calculator (PWA)      │   │ • WebSocket Manager         │
+             │ • GeoChalk Suite (WebGL)    │   │ • SQLAlchemy 2.0 ORM        │
+             │ • PHP-FPM GeoChalk Backend  │   │ • SQLite Database Engine    │
+             │ • Responsive PDF Reader     │   │ • Redis 7 Cache & Session   │
+             └─────────────────────────────┘   └─────────────────────────────┘
 ```
 
----
-
-## 🌟 3. Chi Tiết Từng Phân Hệ Chức Năng
-
-### 3.1. 🧊 GeoChalk - Bảng Kỹ Thuật Tương Tác
-- **Không gian 3D (`3D Geometry`)**: Dựng mặt phẳng $(Oxy)$, $(Oyz)$, $(Oxz)$, khối chóp, lăng trụ, mặt nón, mặt trụ, mặt cầu. Cho phép xoay tự do theo trục không gian 3 chiều với lưới tọa độ rõ nét.
-- **Hình học phẳng (`2D Geometry`)**: Dựng hình học Euclid, đa giác đều, đường tròn nội/ngoại tiếp, giao điểm và các phép đối xứng, tịnh tiến, vị tự.
-- **Khảo sát hàm số (`Graphing`)**: Khảo sát hàm số đa thức, phân thức, hàm lượng giác; tìm cực trị, điểm uốn, tiệm cận, tính diện tích hình phẳng giới hạn bởi tích phân.
-- **Đại số máy tính (`CAS`)**: Giải phương trình vô tỉ, hệ phương trình, tính nguyên hàm, đạo hàm cấp cao và rút gọn biểu thức đại số dạng căn thức.
-- **Điểm nổi bật độc quyền**:
-  - Tông màu xanh bảng phấn chống mỏi mắt: `#13382c`, tương phản cao.
-  - Tự động lưu tức thì (Realtime Auto-Save) qua LocalStorage.
-  - Hoạt động 100% ngoại tuyến (Offline) ngay cả khi mất kết nối mạng.
-
-### 3.2. 🔢 SMT - Giả Lập Máy Tính Cầm Tay PWA
-- Tái hiện chính xác giao diện và thuật toán của máy tính khoa học thế hệ mới (Vinacal 680EX / Casio fx-580VN X).
-- Giải phương trình bậc 2, 3, 4; hệ phương trình lên đến 4 ẩn.
-- Ma trận cấp 4x4, tính định thức $\det(A)$, ma trận nghịch đảo $A^{-1}$.
-- Tính toán số phức (dạng đại số và lượng giác), phân phối thống kê, vector không gian.
-- Chuẩn PWA: Có thể cài đặt trực tiếp lên màn hình chính của điện thoại iPhone/Android như một ứng dụng gốc.
-
-### 3.3. 📐 Hình Học Phẳng 2D
-- Bảng công cụ tinh gọn phục vụ giảng dạy nhanh bài học trên lớp.
-- Thao tác kéo thả mượt mà, hỗ trợ xuất hình ảnh độ phân giải cao phục vụ chèn đề thi vào Word/LaTeX.
-
-### 3.4. 📖 Tài Liệu & Sổ Tay Công Thức THPT
-- Sổ tay phân loại theo từng lớp (Lớp 10, Lớp 11, Lớp 12).
-- Bao quát toàn bộ: Lượng giác, Đạo hàm, Tích phân, Mũ - Logarit, Số phức, Hình học thuần túy và Phương pháp tọa độ trong không gian $Oxyz$.
-- Tích hợp bộ đọc tài liệu trực tuyến không cần tải file về máy.
-
-### 3.5. 📚 EduShare - Kho Học Liệu & Thảo Luận
-- Quản lý và chia sẻ đề thi giữa kỳ, cuối kỳ, đề thi thử tốt nghiệp THPT Quốc gia có lời giải chi tiết.
-- Hệ thống diễn đàn mở cho phép học sinh đặt câu hỏi và giáo viên giải đáp.
-- Hỗ trợ xem trước tài liệu đa định dạng (PDF, DOCX, Hình ảnh).
+### Chi Tiết Công Nghệ:
+- **Backend API:** Python 3.10+, FastAPI (Asynchronous Web Framework), Uvicorn ASGI Server, Pydantic v2.
+- **Backend PHP:** PHP 8.1+ FPM phục vụ lưu trữ bản vẽ GeoChalk.
+- **Cơ Sở Dữ Liệu:** SQLite với cơ chế WAL (Write-Ahead Logging), SQLAlchemy 2.0 ORM đảm bảo toàn vẹn dữ liệu.
+- **Bộ Nhớ Đệm & Quản Lý Phiên:** Redis 7 (hỗ trợ tự động fallback sang In-Memory Cache an toàn).
+- **Frontend:** Vanilla JavaScript hiện đại (ES6+), HTML5 Canvas, WebGL, GeoGebra Web Core 5.0, FontAwesome 6.
+- **Container & Triển Khai:** Docker, Docker Compose, Nginx Reverse Proxy.
 
 ---
 
@@ -117,154 +117,213 @@ Hệ thống được thiết kế theo mô hình **Tách biệt Máy chủ Tĩn
 
 ```bash
 svmath/
-├── README.md                          # Tài liệu hướng dẫn dự án
-├── .gitignore                         # Danh sách file và thư mục loại trừ
+├── README.md                          # Tài liệu kỹ thuật dự án
+├── .gitignore                         # Danh sách file bỏ qua khi đồng bộ Git
 │
-├── Tỉnh/server_math/                  # PHÂN HỆ TĨNH & CÔNG CỤ TOÁN
-│   ├── index.html                     # Trang chủ điều hướng chính (Portal)
-│   ├── export_static_bundle.py        # Script tự động xuất gói web tĩnh (dist)
-│   ├── docker-compose-backend.yml     # Docker compose triển khai backend
-│   ├── HUONG_DAN_TACH_SERVER.md       # Tài liệu chi tiết phân bổ Server
+├── Tỉnh/server_math/                  # PHÂN HỆ TĨNH & CÔNG CỤ TOÁN HỌC
+│   ├── index.html                     # Trang chủ điều hướng trung tâm (Portal)
+│   ├── export_static_bundle.py        # Kịch bản đóng gói phân phối web tĩnh
+│   ├── nginx-math-hub.conf            # Cấu hình Nginx máy chủ Math Hub
+│   ├── nginx-backend.conf             # Cấu hình Nginx máy chủ dịch vụ backend
+│   ├── docker-compose-backend.yml     # Docker Compose cho dịch vụ tĩnh & PHP
 │   │
-│   ├── geochalk/                      # Phân hệ GeoChalk
-│   │   ├── geochalk.html              # Bảng vẽ kỹ thuật chính
-│   │   ├── api.php                    # Backend API PHP lưu bài vẽ
-│   │   └── GeoChalk/                  # Thư viện lõi GeoGebra 5.0 (HTML5, JS, CSS)
+│   ├── geochalk/                      # Ứng dụng bảng vẽ kỹ thuật GeoChalk
+│   │   ├── geochalk.html              # Giao diện chính bảng vẽ
+│   │   ├── api.php                    # API lưu trữ và quản lý bản vẽ
+│   │   └── GeoChalk/                  # Lõi GeoGebra 5.0 (HTML5, JS, CSS)
 │   │
-│   ├── smt/                           # Phân hệ máy tính giả lập
-│   │   └── index.html                 # Giao diện máy tính PWA
+│   ├── smt/                           # Ứng dụng máy tính khoa học PWA
+│   │   ├── index.html                 # Giao diện máy tính
+│   │   └── manifest.json              # Khai báo cấu hình PWA di động
 │   │
-│   └── toan/                          # Phân hệ hình học & tài liệu
-│       ├── hh2D.html                  # Bảng vẽ 2D
-│       └── tailieutonghop.html        # Trang tra cứu tài liệu & công thức
+│   └── toan/                          # Tài liệu & hình học 2D
+│       ├── hh2D.html                  # Bảng vẽ hình học phẳng 2D
+│       └── tailieutonghop.html        # Sổ tay công thức và tài liệu PDF
 │
 └── Động/share_tailieu/                # PHÂN HỆ ĐỘNG EDUSHARE
-    ├── server.py                      # FastAPI App (Cổng dịch vụ 5500)
-    ├── server.js                      # NodeJS Server (tuỳ chọn)
-    ├── Dockerfile                     # Đóng gói Docker backend EduShare
-    ├── docker-compose.yml             # Khởi chạy EduShare Container
-    ├── requirements.txt               # Thư viện Python phụ thuộc
-    ├── .env.example                   # Cấu hình mẫu biến môi trường
-    └── uploads/                       # Thư mục lưu trữ tài liệu tải lên
+    ├── main.py                        # Ứng dụng lõi FastAPI (REST API & WebSocket)
+    ├── vnai_drive.py                  # Module tích hợp Cloud Drive lưu trữ
+    ├── app.js                         # Điều khiển logic giao diện EduShare SPA
+    ├── index.html                     # Giao diện chính nền tảng EduShare
+    ├── Dockerfile                     # Đóng gói Docker Container EduShare
+    ├── docker-compose.yml             # Cấu hình khởi chạy EduShare & Redis
+    ├── requirements.txt               # Danh mục thư viện Python phụ thuộc
+    ├── .env.example                   # Biến môi trường mẫu
+    └── uploads/                       # Thư mục lưu trữ tệp đính kèm cục bộ
 ```
 
 ---
 
-## 🚀 5. Hướng Dẫn Cài Đặt & Triển Khai (Self-Host)
+## 🔒 5. Tính Năng Bảo Mật Hiện Có (Security Features)
+
+Hệ thống được thiết kế với phương châm đảm bảo an toàn thông tin theo kiến trúc phòng thủ đa tầng (**Defense-in-Depth**), áp dụng các chuẩn mã hóa và bảo mật dữ liệu hiện đại:
+
+1. **Chuẩn Băm Mật Khẩu PBKDF2-HMAC-SHA256:**
+   - Hệ thống áp dụng khuyến nghị của NIST về an toàn mật khẩu: Sử dụng thuật toán `PBKDF2-HMAC-SHA256` với **100.000 vòng lặp** và Salt ngẫu nhiên 16 bytes sinh bằng bộ sinh số ngẫu nhiên an toàn mật mã (CSPRNG).
+   - Kiểm tra mật khẩu bằng hàm so sánh thời gian cố định `hmac.compare_digest` nhằm loại bỏ hoàn toàn nguy cơ tấn công đo thời gian (Timing Attack / Side-Channel Attack).
+   - Tích hợp cơ chế **Zero-Downtime Migration**: Tự động chuyển đổi và nâng cấp mật khẩu cũ sang chuẩn băm PBKDF2 ngay khi người dùng đăng nhập thành công.
+
+2. **Cơ Chế Sinh Mã Xác Thực OTP An Toàn:**
+   - Mã OTP 6 chữ số được sinh hoàn toàn ngẫu nhiên tại máy chủ bằng thư viện `secrets` an toàn mật mã (`secrets.randbelow`).
+   - OTP được lưu trữ tập trung trên Redis Cache với thời gian hết hạn tự động (TTL) 10 phút và được truyền tải an toàn qua máy chủ gửi thư Gmail SMTP mã hóa SSL/TLS.
+
+3. **Lớp Phòng Vệ File Tĩnh Đa Tầng (Multi-Layer File Protection):**
+   - **Tầng Middleware:** `block_sensitive_files_middleware` chủ động kiểm tra và chặn ngay lập tức (trả về HTTP 404) mọi yêu cầu truy xuất tệp nhạy cảm có phần mở rộng như `.db`, `.sqlite`, `.env`, `.py`, `.yml`, `.sh`, `.git`.
+   - **Tầng Ứng Dụng:** Sử dụng lớp kế thừa chuyên biệt `SecureStaticFiles` chỉ cho phép phục vụ các định dạng tệp tĩnh an toàn trong danh sách whitelist (`.html`, `.css`, `.js`, `.png`, `.jpg`, `.pdf`, v.v.).
+
+4. **Phòng Ngừa Stored XSS Khi Tải Tệp:**
+   - Hệ thống kiểm soát nghiêm ngặt loại MIME của tệp thông qua hàm `is_safe_for_inline()`.
+   - Các định dạng tệp tiềm ẩn nguy cơ thực thi mã (HTML, SVG, XML, JS) được tự động ép buộc tải về dưới dạng tệp đính kèm (`Content-Disposition: attachment`) kèm theo tiêu đề bảo mật `X-Content-Type-Options: nosniff` để vô hiệu hóa tính năng MIME Sniffing của trình duyệt.
+
+5. **Kiểm Soát Truy Cập CORS Theo Danh Sách Tin Cậy (Whitelist):**
+   - Cấu hình CORS được thắt chặt, chỉ cho phép các tên miền chính thức trong hệ sinh thái (`https://edushare.vn-ai.cloud`, `https://math.vn-ai.cloud`, `http://localhost:5500`) truy cập tài nguyên API với đầy đủ thông tin xác thực (Credentials).
+
+6. **Phòng Ngừa Tấn Công SQL Injection:**
+   - 100% các thao tác truy vấn dữ liệu nghiệp vụ (người dùng, bài viết, phòng học, tin nhắn) đều được thực hiện qua **SQLAlchemy ORM** với cơ chế tham số hóa tự động (Parameterized Queries).
+
+7. **Cách Ly Mạng Nội Bộ Redis:**
+   - Dịch vụ Redis trong Docker Compose được ràng buộc chặt chẽ vào giao diện loopback `127.0.0.1:6379`, ngăn chặn mọi truy cập trái phép từ bên ngoài mạng Internet.
+
+---
+
+## 🚀 6. Hướng Dẫn Cài Đặt & Khởi Chạy
 
 ### Yêu Cầu Môi Trường
-- **Hệ điều hành**: Linux Ubuntu 20.04/22.04 LTS hoặc Windows Server
-- **Web Server**: Nginx
-- **Ngôn ngữ**: Python 3.10+, PHP 8.1+ (kèm `php-fpm`, `php-sqlite3`), Node.js 18+ (tùy chọn)
+- **Hệ điều hành:** Linux (Ubuntu 20.04/22.04 LTS), macOS hoặc Windows 10/11
+- **Docker & Docker Compose** (khuyến nghị cho môi trường Production)
+- **Hoặc môi trường thủ công:** Python 3.10+, PHP 8.1+ (kèm `php-fpm`, `php-sqlite3`), Nginx
 
-### Bước 1: Clone kho mã nguồn
+---
 
-```bash
-git clone https://github.com/hohau0405ff/math.git
-cd math
-```
+### 6.1. Triển khai bằng Docker Compose (Khuyến nghị)
 
-### Bước 2: Triển khai Backend EduShare (Python FastAPI)
+Khởi chạy toàn bộ dịch vụ EduShare và Redis bằng Docker Compose:
 
 ```bash
 cd "Động/share_tailieu"
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-# Chỉnh sửa cấu hình trong file .env
-uvicorn server:app --host 0.0.0.0 --port 5500 --reload
+docker compose up -d --build
 ```
 
-### Bước 3: Cấu hình Nginx Web Tĩnh & Reverse Proxy
+Kiểm tra trạng thái các container:
+```bash
+docker compose ps
+```
 
-Mẫu cấu hình Nginx cơ bản (`/etc/nginx/sites-available/math-hub.conf`):
+---
+
+### 6.2. Triển khai thủ công (Manual Setup)
+
+#### Bước 1: Khởi chạy Backend EduShare (FastAPI)
+```bash
+cd "Động/share_tailieu"
+python -m venv venv
+
+# Kích hoạt môi trường ảo (Linux/macOS)
+source venv/bin/activate
+# Hoặc trên Windows:
+# .\venv\Scripts\activate
+
+pip install -r requirements.txt
+cp .env.example .env
+# Chỉnh sửa thông tin trong file .env phù hợp
+
+uvicorn main:app --host 0.0.0.0 --port 5500 --reload
+```
+
+#### Bước 2: Khởi chạy Dịch Vụ Web Tĩnh & GeoChalk (PHP)
+Đảm bảo PHP-FPM đang hoạt động và trỏ thư mục gốc của Nginx vào `Tỉnh/server_math/`.
+
+---
+
+### 6.3. Cấu hình Nginx Reverse Proxy
+
+Mẫu cấu hình tham khảo cho Nginx phục vụ Math Hub và chuyển tiếp API EduShare:
 
 ```nginx
 server {
     listen 80;
     server_name math.vn-ai.cloud;
-    root /var/www/server_math;
+    root /var/www/svmath/Tỉnh/server_math;
     index index.html;
 
     location / {
         try_files $uri $uri/ /index.html;
     }
 
-    # Cấu hình GeoChalk PHP Backend
+    # Xử lý PHP cho ứng dụng GeoChalk
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
         fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
     }
 
-    # Proxy tới EduShare API
-    location /api/edushare/ {
-        proxy_pass http://127.0.0.1:5500/;
+    # Proxy tới dịch vụ Backend EduShare
+    location /api/ {
+        proxy_pass http://127.0.0.1:5500/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # WebSocket Proxy cho phòng học trực tuyến
+    location /ws {
+        proxy_pass http://127.0.0.1:5500/ws;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
     }
 }
 ```
 
-Kích hoạt cấu hình và tải lại Nginx:
-
+Kiểm tra và áp dụng cấu hình:
 ```bash
-sudo ln -s /etc/nginx/sites-available/math-hub.conf /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx
+sudo nginx -t && sudo systemctl reload nginx
 ```
 
 ---
 
-## 🔒 6. Cấu Hình Biến Môi Trường (.env)
+## ⚙️ 7. Biến Môi Trường (.env)
 
-Tạo file `.env` bên trong thư mục `Động/share_tailieu/` dựa theo mẫu:
+Tạo file `.env` tại thư mục `Động/share_tailieu/` với nội dung mẫu:
 
 ```ini
-# Cổng dịch vụ
+# Cấu hình cổng ứng dụng
 PORT=5500
 
-# Cấu hình SMTP gửi thông báo (Tùy chọn)
+# Cấu hình kết nối Redis Cache
+REDIS_URL=redis://127.0.0.1:6379/0
+
+# Cấu hình gửi thư OTP (Gmail SMTP)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=465
 SMTP_USER=your_email@gmail.com
 SMTP_PASS=your_app_password
 
-# Cấu hình Lưu Trữ Đám Mây Cloud Drive
+# Cấu hình Cloud Storage (Tùy chọn)
 VNAI_DRIVE_BASE_URL=https://drive.vn-ai.cloud/api
 VNAI_DRIVE_API_NAME=api_edu_share
-VNAI_DRIVE_API_KEY=your_secret_api_key
+VNAI_DRIVE_API_KEY=your_drive_api_key
 FILE_RETENTION_DAYS=60
 
-# Đường dẫn GeoChalk
+# Đường dẫn GeoChalk tương tác
 GEOCHALK_URL=https://math.vn-ai.cloud/geochalk/geochalk.html
 ```
 
-> **Lưu ý bảo mật:** Tuyệt đối không commit file `.env` thực tế chứa mật khẩu hoặc API Key lên kho GitHub công khai.
-
 ---
 
-## 🗺️ 7. Kế Hoạch Nâng Cấp (Roadmap)
+## 👥 8. Thông Tin Tác Giả & Đóng Góp
 
-- [x] Tích hợp bộ công cụ GeoChalk bảng kỹ thuật 4 trong 1.
-- [x] Tối ưu hóa bộ nhớ đệm LocalStorage tự động lưu bài vẽ.
-- [x] Đồng bộ phân hệ máy tính khoa học PWA hỗ trợ đa nền tảng.
-- [ ] Tích hợp tính năng AI nhận diện đề toán qua hình ảnh (LaTeX OCR).
-- [ ] Xuất file hình vẽ động 3D sang định dạng nhúng WebGL và tệp in 3D (.STL).
-- [ ] Nâng cấp ngân hàng đề thi trắc nghiệm chấm điểm tự động trên EduShare.
-
----
-
-## 👥 Đóng Góp & Tác Giả
-
-- **Quản trị & Phát triển dự án**: [hohau0405ff](https://github.com/hohau0405ff)
-- **Email liên hệ**: [hotrantrunghau951842@gmail.com](mailto:hotrantrunghau951842@gmail.com)
-- **Đóng góp ý kiến**: Mọi đóng góp xin vui lòng gửi qua mục [Issues](https://github.com/hohau0405ff/math/issues) hoặc mở một [Pull Request](https://github.com/hohau0405ff/math/pulls).
+- **Quản trị & Phát triển dự án:** [hohau0405ff](https://github.com/hohau0405ff)
+- **Email liên hệ:** [hotrantrunghau951842@gmail.com](mailto:hotrantrunghau951842@gmail.com)
+- **Đóng góp phát triển:** Mọi đề xuất cải tiến hoặc đóng góp tính năng xin vui lòng gửi thông qua [Issues](https://github.com/hohau0405ff/math/issues) hoặc mở một [Pull Request](https://github.com/hohau0405ff/math/pulls).
 
 ---
 
 <p align="center">
-  <i>Được xây dựng với niềm đam mê Toán học và Công nghệ giáo dục.</i><br>
-  © 2025 <b>Math Hub Community</b>. All rights reserved.
+  <i>Được xây dựng vì mục tiêu nâng cao chất lượng giáo dục và kết nối cộng đồng Toán học Việt Nam.</i><br>
+  © 2026 <b>Math Hub & EduShare Community</b>. All rights reserved.
 </p>

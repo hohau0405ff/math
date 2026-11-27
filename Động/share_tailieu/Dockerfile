@@ -8,11 +8,7 @@ WORKDIR /app
 # Thiết lập biến môi trường Python
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
-    PORT=5500 \
-    DATABASE_URL=sqlite:///./edushare.db \
-    REDIS_URL=redis://redis:6379/0 \
-    SMTP_HOST=smtp.gmail.com \
-    SMTP_PORT=465
+    PORT=5500
 
 # Cài đặt các gói phụ thuộc
 COPY requirements.txt /app/

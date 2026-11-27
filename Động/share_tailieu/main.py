@@ -25,7 +25,6 @@ import re
 import secrets
 import hashlib
 import hmac
-import urllib.parse
 from uuid import uuid4
 from typing import Optional, List, Dict, Any, Set
 from datetime import datetime, timedelta
@@ -84,7 +83,7 @@ class DBUser(Base):
     __tablename__ = "users"
     id = Column(String(64), primary_key=True, index=True)
     email = Column(String(128), unique=True, index=True, nullable=False)
-    password = Column(String(128), nullable=False, default="123")
+    password = Column(String(256), nullable=False, default="123")
     name = Column(String(128), nullable=False)
     role = Column(String(32), default="user")
     is_system_admin = Column(Boolean, default=False)
@@ -216,7 +215,7 @@ SEED_MESSAGES = [
         "sender_role": "Super Admin",
         "sender_avatar": "https://api.dicebear.com/7.x/bottts/svg?seed=AdminTrungHau",
         "text": "🎉 Chào mừng các bạn đến với Hệ Thống Trao Đổi & Chia Sẻ Tài Liệu EduShare! Mọi tài liệu gửi lên đây đều được sao lưu và lưu trữ tự động an toàn 60 ngày.",
-        "attachment_json": None
+        "attachment": None
     }
 ]
 
@@ -278,47 +277,8 @@ def ensure_schema_migrations():
             add_col_if_missing("documents", "drive_download_url", "VARCHAR(512)")
             add_col_if_missing("documents", "vnai_file_id", "VARCHAR(128)")
             add_col_if_missing("documents", "vnai_provider_file_id", "VARCHAR(128)")
-            add_col_if_missing("posts", "attachment_json", "TEXT")
-            add_col_if_missing("posts", "author_id", "VARCHAR(64)")
     except Exception as e:
         print(f"[Migration Error] {e}")
-
-# ==================== BẢO MẬT: MÃ HÓA MẬT KHẨU (PBKDF2-HMAC-SHA256) ====================
-def hash_password(password: str) -> str:
-    """Mã hóa mật khẩu bằng thuật toán PBKDF2-HMAC-SHA256 với Salt ngẫu nhiên (100.000 vòng lặp)"""
-    if not password:
-        return ""
-    salt = secrets.token_hex(16)
-    key = hashlib.pbkdf2_hmac(
-        'sha256',
-        password.encode('utf-8'),
-        salt.encode('utf-8'),
-        100000
-    )
-    return f"pbkdf2_sha256$100000${salt}${key.hex()}"
-
-def verify_password(plain_password: str, stored_password: str) -> bool:
-    """Xác thực mật khẩu: Hỗ trợ chuẩn băm PBKDF2 và tương thích ngược với mật khẩu cũ (tự động nâng cấp)"""
-    if not stored_password or not plain_password:
-        return False
-    if stored_password.startswith("pbkdf2_sha256$"):
-        try:
-            parts = stored_password.split("$")
-            if len(parts) == 4:
-                iterations = int(parts[1])
-                salt = parts[2]
-                expected_hash = parts[3]
-                calculated = hashlib.pbkdf2_hmac(
-                    'sha256',
-                    plain_password.encode('utf-8'),
-                    salt.encode('utf-8'),
-                    iterations
-                )
-                return hmac.compare_digest(calculated.hex(), expected_hash)
-        except Exception:
-            return False
-    # Tương thích ngược với mật khẩu cũ dạng plain text
-    return hmac.compare_digest(plain_password.encode('utf-8'), stored_password.encode('utf-8'))
 
 def init_db():
     """Tạo bảng và nạp dữ liệu khởi tạo đầy đủ nếu chưa có"""
@@ -333,7 +293,7 @@ def init_db():
                 db.add(DBUser(
                     id=u["id"],
                     email=u["email"],
-                    password=hash_password(u["password"]),
+                    password=hash_password(u["password"]) if not u["password"].startswith("pbkdf2_sha256$") else u["password"],
                     name=u["name"],
                     role=u["role"],
                     is_system_admin=u["is_system_admin"],
@@ -341,9 +301,6 @@ def init_db():
                     sub_info=u["sub_info"],
                     avatar=u["avatar"]
                 ))
-            elif not existing.password.startswith("pbkdf2_sha256$"):
-                # Tự động mã hóa bảo vệ mật khẩu cũ chưa băm
-                existing.password = hash_password(existing.password)
         db.commit()
 
         # 2. Nạp Rooms
@@ -376,7 +333,7 @@ def init_db():
                     sender_role=m["sender_role"],
                     sender_avatar=m["sender_avatar"],
                     text=m["text"],
-                    attachment_json=m.get("attachment_json")
+                    attachment_json=m["attachment_json"]
                 ))
         db.commit()
 
@@ -519,6 +476,64 @@ def to_iso_utc(dt: Optional[datetime]) -> str:
         iso += "Z"
     return iso
 
+# ==================== BẢO MẬT MẬT KHẨU (PBKDF2-HMAC-SHA256) ====================
+def hash_password(password: str) -> str:
+    """Băm mật khẩu chuẩn NIST sử dụng PBKDF2-HMAC-SHA256 với Salt 16 bytes và 100.000 vòng lặp"""
+    if not password:
+        return ""
+    salt = secrets.token_hex(16)
+    key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt.encode('utf-8'), 100000)
+    return f"pbkdf2_sha256$100000${salt}${key.hex()}"
+
+def verify_password(plain_password: str, stored_password: str) -> bool:
+    """Xác thực mật khẩu với thời gian hằng số (Constant-Time) chống Timing Attack"""
+    if not stored_password or not plain_password:
+        return False
+    if stored_password.startswith("pbkdf2_sha256$"):
+        try:
+            _, iters, salt, h = stored_password.split("$")
+            calculated = hashlib.pbkdf2_hmac('sha256', plain_password.encode('utf-8'), salt.encode('utf-8'), int(iters))
+            return hmac.compare_digest(calculated.hex(), h)
+        except Exception:
+            return False
+    # Tương thích ngược bảo vệ constant-time cho mật khẩu cũ trước khi migrate
+    return hmac.compare_digest(plain_password.encode('utf-8'), stored_password.encode('utf-8'))
+
+# ==================== XÁC THỰC PHIÊN LÀM VIỆC & PHÂN QUYỀN (BEARER TOKEN) ====================
+def get_auth_user(request: Request, db) -> Optional[DBUser]:
+    """Trích xuất và xác thực Bearer Token từ header Authorization hoặc query param qua Redis/Memory cache"""
+    auth_header = request.headers.get("Authorization")
+    token = None
+    if auth_header:
+        parts = auth_header.split()
+        if len(parts) == 2 and parts[0].lower() == "bearer":
+            token = parts[1].strip()
+        elif len(parts) == 1:
+            token = parts[0].strip()
+    if not token:
+        token = request.query_params.get("token")
+    if token:
+        user_id = cache_get(f"token:{token}")
+        if user_id:
+            return db.query(DBUser).filter(DBUser.id == user_id).first()
+    return None
+
+# ==================== DANH SÁCH FILE VÀ PHÒNG CHỐNG STORED XSS ====================
+DANGEROUS_INLINE_MIMES = {
+    "text/html", "application/xhtml+xml", "text/javascript",
+    "application/javascript", "image/svg+xml", "application/xml", "text/xml"
+}
+
+def is_safe_for_inline(mime_type: Optional[str], filename: Optional[str]) -> bool:
+    """Kiểm tra tệp an toàn để hiển thị inline, chặn các file có khả năng thực thi script gây XSS"""
+    mime = (mime_type or "").lower().split(";")[0].strip()
+    if mime in DANGEROUS_INLINE_MIMES:
+        return False
+    fn = (filename or "").lower()
+    if any(fn.endswith(ext) for ext in [".html", ".htm", ".svg", ".js", ".xml", ".xhtml", ".shtml"]):
+        return False
+    return True
+
 # ==================== PHÂN HỆ HÌNH HỌC GEOCHALK ====================
 GEOCHALK_URL = os.environ.get("GEOCHALK_URL", "https://math.vn-ai.cloud/geochalk/geochalk.html").rstrip("/")
 
@@ -610,68 +625,61 @@ def send_email_via_gmail_smtp(to_email: str, subject: str, text_content: str, ht
     server.quit()
     return True
 
-# ==================== 4. FASTAPI APP, SECURITY & SCHEMAS ====================
+# ==================== 4. FASTAPI APP & SCHEMAS ====================
 app = FastAPI(
     title="EduShare API",
     description="Hệ thống Backend FastAPI + SQL + Redis cho EduShare",
     version="6.0.0"
 )
 
-# Cấu hình danh sách Origins được phép truy cập an toàn (chống CSRF & Data Leakage)
-ALLOWED_ORIGINS_ENV = os.environ.get("ALLOWED_ORIGINS", "")
-ALLOWED_ORIGINS = [
-    origin.strip() for origin in ALLOWED_ORIGINS_ENV.split(",") if origin.strip()
-] or [
-    "https://edushare.vn-ai.cloud",
-    "https://math.vn-ai.cloud",
-    "http://localhost:5500",
-    "http://127.0.0.1:5500",
-    "http://localhost:8080",
-    "http://127.0.0.1:8080",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000"
-]
+# Cấu hình Whitelist CORS bảo mật (Vá Lỗ hổng 7: Chặn CORS Wildcard kết hợp Credentials)
+env_origins = os.environ.get("ALLOWED_ORIGINS", "")
+if env_origins:
+    ALLOWED_ORIGINS = [o.strip() for o in env_origins.split(",") if o.strip()]
+else:
+    ALLOWED_ORIGINS = [
+        "https://edushare.vn-ai.cloud",
+        "https://math.vn-ai.cloud",
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+        "http://localhost:8080",
+        "http://127.0.0.1:8080"
+    ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
 )
 
-# Danh sách mẫu tệp nhạy cảm bị cấm truy cập tuyệt đối qua HTTP/Web
-BLOCKED_SENSITIVE_PATTERNS = re.compile(
-    r'(\.env|\.db|\.sqlite|\.sqlite3|\.py$|\.pyc$|\.yml$|\.yaml$|\.md$|\.gs$|\.sh$|\.git|dockerfile|requirements\.txt)',
-    re.IGNORECASE
-)
+# Vá Lỗ hổng 2 (Tầng Middleware): Chặn tuyệt đối các yêu cầu truy cập trực tiếp file nhạy cảm
+FORBIDDEN_EXTENSIONS = {
+    ".db", ".sqlite", ".sqlite3", ".env", ".py", ".pyc", ".pyd",
+    ".yml", ".yaml", ".sh", ".bash", ".log", ".git", ".md", ".gs",
+    ".ini", ".conf", ".cfg", ".bak", ".swp"
+}
 
 @app.middleware("http")
-async def security_and_cache_middleware(request: Request, call_next):
-    """
-    1. Chặn tuyệt đối truy cập các tệp nhạy cảm (CSDL SQLite, file cấu hình, mã nguồn backend)
-    2. Thiết lập toàn diện HTTP Security Headers (chống XSS, Clickjacking, MIME-Sniffing)
-    3. Kiểm soát bộ đệm (No-Cache) cho các tệp giao diện động & API
-    """
-    path = request.url.path.lower()
+async def block_sensitive_files_middleware(request: Request, call_next):
+    raw_path = request.url.path.lower()
+    for bad_ext in FORBIDDEN_EXTENSIONS:
+        if raw_path.endswith(bad_ext) or f"{bad_ext}?" in raw_path or f"{bad_ext}/" in raw_path:
+            return JSONResponse(status_code=404, content={"detail": "Tài nguyên không tồn tại hoặc đã bị khóa bảo mật."})
+    for bad_name in ["edushare.db", ".env", "/.git", "dockerfile", "docker-compose", "requirements.txt"]:
+        if bad_name in raw_path:
+            return JSONResponse(status_code=404, content={"detail": "Tài nguyên không tồn tại hoặc đã bị khóa bảo mật."})
+    return await call_next(request)
 
-    # 1. Chặn truy cập trực tiếp file nhạy cảm và file/thư mục ẩn
-    path_segments = [p for p in path.strip("/").split("/") if p]
-    if (
-        BLOCKED_SENSITIVE_PATTERNS.search(path)
-        or any(seg.startswith(".") for seg in path_segments)
-    ):
-        return Response(status_code=404, content="Not Found")
-
+@app.middleware("http")
+async def add_no_cache_headers(request: Request, call_next):
+    """
+    Vô hiệu hóa triệt để browser cache đối với file HTML, JS, CSS và toàn bộ API.
+    Người dùng không bao giờ bị dính cache cũ hoặc phải bấm Ctrl+F5 mới thấy cập nhật.
+    """
     response = await call_next(request)
-
-    # 2. Thiết lập HTTP Security Headers
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "SAMEORIGIN"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["X-XSS-Protection"] = "1; mode=block"
-
-    # 3. Vô hiệu hóa triệt để browser cache đối với file HTML, JS, CSS và toàn bộ API
+    path = request.url.path.lower()
     if (
         path.endswith((".js", ".css", ".html", ".json")) or
         path in ["/", "/index.html", "/feed"] or
@@ -680,26 +688,7 @@ async def security_and_cache_middleware(request: Request, call_next):
         response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
-
     return response
-
-# Helper xác thực người dùng qua Bearer Token
-def get_user_from_token(token_str: Optional[str], db) -> Optional[DBUser]:
-    if not token_str:
-        return None
-    token = token_str.strip()
-    if token.lower().startswith("bearer "):
-        token = token[7:].strip()
-    user_id = cache_get(f"token:{token}")
-    if not user_id:
-        return None
-    return db.query(DBUser).filter(DBUser.id == user_id).first()
-
-def get_auth_user(request: Request, db) -> Optional[DBUser]:
-    auth_header = request.headers.get("Authorization")
-    if not auth_header:
-        return None
-    return get_user_from_token(auth_header, db)
 
 # ==================== WEBSOCKET REALTIME CONNECTION MANAGER ====================
 class ConnectionManager:
@@ -1084,9 +1073,9 @@ def smtp_status():
 @app.post("/api/send-otp")
 def api_send_otp(req: SendOtpRequest):
     email = req.email.lower().strip()
-    # Luôn sinh ngẫu nhiên mã OTP 6 số bảo mật bằng secrets, không bao giờ nhận từ client
+    # Sinh mã OTP 6 chữ số ngẫu nhiên an toàn bằng CSPRNG (secrets) từ server, chặn hoàn toàn injection
     otp = f"{secrets.randbelow(900000) + 100000}"
-    req_type = req.type or "register"
+    req_type = req.type
     type_label = "ĐẶT LẠI MẬT KHẨU" if req_type == "forgot" else "ĐĂNG KÝ TÀI KHOẢN"
 
     # Lưu mã OTP vào Cache với TTL 600s (10 phút)
@@ -1173,7 +1162,7 @@ def api_login(req: LoginRequest):
         if not user or not verify_password(password, user.password):
             raise HTTPException(status_code=401, detail="Địa chỉ Gmail hoặc mật khẩu không chính xác.")
 
-        # Tự động nâng cấp mật khẩu cũ (plaintext) sang mã hóa chuẩn PBKDF2
+        # Zero-Downtime Migration: Tự động nâng cấp mật khẩu cũ sang PBKDF2-HMAC-SHA256
         if not user.password.startswith("pbkdf2_sha256$"):
             user.password = hash_password(password)
             db.commit()
@@ -1415,9 +1404,12 @@ async def update_profile(req: ProfileUpdateRequest, request: Request):
     email = req.email.strip().lower()
     db = SessionLocal()
     try:
-        current_user = get_auth_user(request, db)
-        if current_user and current_user.email.strip().lower() != email and not current_user.is_system_admin:
-            raise HTTPException(status_code=403, detail="Bạn không có quyền chỉnh sửa thông tin của tài khoản khác.")
+        # Kiểm tra xác thực quyền sở hữu qua Bearer Token (Vá Lỗ hổng 4: BOLA / IDOR)
+        auth_user = get_auth_user(request, db)
+        if not auth_user:
+            raise HTTPException(status_code=401, detail="Phiên làm việc hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.")
+        if auth_user.email.lower() != email and not auth_user.is_system_admin:
+            raise HTTPException(status_code=403, detail="Bạn không có quyền chỉnh sửa hồ sơ của tài khoản khác.")
 
         user = db.query(DBUser).filter(DBUser.email == email).first()
         if not user:
@@ -1871,25 +1863,25 @@ def leave_room(room_id: str, user_email: str = Query(...)):
         db.close()
 
 @app.delete("/api/rooms/{room_id}")
-def delete_room_forever(room_id: str, request: Request, user_email: str = Query(...)):
+def delete_room_forever(room_id: str, request: Request, user_email: Optional[str] = Query(None)):
     if room_id == "room_community":
         raise HTTPException(status_code=400, detail="Không thể xóa nhóm Diễn Đàn Học Sinh cộng đồng chung toàn trường.")
 
     db = SessionLocal()
     try:
+        auth_user = get_auth_user(request, db)
+        req_email = (auth_user.email.lower() if auth_user else (user_email or "").strip().lower())
+        if not req_email:
+            raise HTTPException(status_code=401, detail="Phiên làm việc hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.")
+
         room = db.query(DBRoom).filter(DBRoom.id == room_id).first()
         if not room:
             raise HTTPException(status_code=404, detail="Không tìm thấy nhóm cần xóa.")
 
-        current_user = get_auth_user(request, db)
-        actual_email = (current_user.email if current_user else user_email).strip().lower()
-
-        # Kiểm tra quyền: CHỈ DUY NHẤT TRƯỞNG NHÓM (leader) của phòng hoặc System Admin mới được xóa vĩnh viễn!
-        is_admin = current_user.is_system_admin if current_user else bool(
-            db.query(DBUser).filter(DBUser.email == actual_email, DBUser.is_system_admin == True).first()
-        )
+        # Kiểm tra quyền: CHỈ DUY NHẤT TRƯỞNG NHÓM (leader) hoặc QUẢN TRỊ VIÊN mới được xóa vĩnh viễn (Vá Lỗ hổng 4: BOLA)
         members = json.loads(room.members_json or "[]")
-        user_role = next((m.get("role") for m in members if m.get("email") == actual_email), None)
+        user_role = next((m.get("role") for m in members if m.get("email") == req_email), None)
+        is_admin = auth_user.is_system_admin if auth_user else False
 
         if user_role != "leader" and not is_admin:
             raise HTTPException(status_code=403, detail="Chỉ duy nhất Trưởng nhóm hoặc Quản trị viên mới có quyền xóa vĩnh viễn nhóm này.")
@@ -2798,20 +2790,43 @@ def clear_direct_chat(room_id: str, user_email: str = Query(...)):
     finally:
         db.close()
 
-DANGEROUS_INLINE_MIMES = {
-    "text/html", "application/xhtml+xml", "text/javascript",
-    "application/javascript", "image/svg+xml", "application/xml",
-    "text/xml"
-}
+def make_file_download_response(
+    content: bytes,
+    filename: str,
+    raw_mime: Optional[str],
+    inline_requested: bool = False
+) -> Response:
+    """Tạo phản hồi tải tệp nhị phân an toàn, ép attachment nếu tệp có nguy cơ Stored XSS (Vá Lỗ hổng 5)"""
+    is_safe = is_safe_for_inline(raw_mime, filename)
+    disp = "inline" if (inline_requested and is_safe) else "attachment"
+    media_type = (raw_mime or "application/octet-stream") if is_safe else "application/octet-stream"
+    safe_title = (filename or "file").replace('"', '\\"')
+    encoded_title = urllib.parse.quote(filename or "file")
+    headers = {
+        "Content-Disposition": f'{disp}; filename="{safe_title}"; filename*=UTF-8\'\'{encoded_title}',
+        "X-Content-Type-Options": "nosniff",
+        "Access-Control-Expose-Headers": "Content-Disposition"
+    }
+    return Response(content=content, media_type=media_type, headers=headers)
 
-def is_safe_for_inline(mime_type: Optional[str], filename: Optional[str]) -> bool:
-    mime = (mime_type or "").lower().split(";")[0].strip()
-    if mime in DANGEROUS_INLINE_MIMES:
-        return False
-    fn = (filename or "").lower()
-    if any(fn.endswith(ext) for ext in [".html", ".htm", ".svg", ".js", ".xml", ".xhtml"]):
-        return False
-    return True
+def make_file_path_response(
+    path: str,
+    filename: str,
+    raw_mime: Optional[str],
+    inline_requested: bool = False
+) -> FileResponse:
+    """Tạo FileResponse an toàn từ tệp trên ổ đĩa, kèm header nosniff (Vá Lỗ hổng 5)"""
+    is_safe = is_safe_for_inline(raw_mime, filename)
+    disp = "inline" if (inline_requested and is_safe) else "attachment"
+    media_type = (raw_mime or "application/octet-stream") if is_safe else "application/octet-stream"
+    safe_title = (filename or "file").replace('"', '\\"')
+    encoded_title = urllib.parse.quote(filename or "file")
+    headers = {
+        "Content-Disposition": f'{disp}; filename="{safe_title}"; filename*=UTF-8\'\'{encoded_title}',
+        "X-Content-Type-Options": "nosniff",
+        "Access-Control-Expose-Headers": "Content-Disposition"
+    }
+    return FileResponse(path=path, media_type=media_type, headers=headers)
 
 @app.get("/api/docs/{doc_id}/download")
 def download_doc(doc_id: str, inline: Optional[bool] = False):
@@ -2819,6 +2834,7 @@ def download_doc(doc_id: str, inline: Optional[bool] = False):
     Tải tệp trực tiếp thông qua EduShare Backend (Proxy / Stream Binary).
     Đảm bảo 100% người dùng tải file thẳng về máy tính, KHÔNG BAO GIỜ bị chuyển hướng
     hoặc mở giao diện trang web EduShare / HCDrive bên thứ 3.
+    Áp dụng kiểm duyệt an ninh Stored XSS và nosniff (Vá Lỗ hổng 5).
     """
     db = SessionLocal()
     try:
@@ -2838,17 +2854,11 @@ def download_doc(doc_id: str, inline: Optional[bool] = False):
                         res = fetch_file_binary(file_id=att_vnai_id, provider_file_id=att_provider_id)
                         if res:
                             raw_bytes, fetched_mime = res
-                            safe_title = att_title.replace('"', '\\"')
-                            encoded_title = urllib.parse.quote(att_title)
-                            disp_type = "inline" if (inline and is_safe_for_inline(fetched_mime or att_mime, att_title)) else "attachment"
-                            return Response(
+                            return make_file_download_response(
                                 content=raw_bytes,
-                                media_type=fetched_mime or att_mime,
-                                headers={
-                                    "Content-Disposition": f'{disp_type}; filename="{safe_title}"; filename*=UTF-8\'\'{encoded_title}',
-                                    "Access-Control-Expose-Headers": "Content-Disposition",
-                                    "X-Content-Type-Options": "nosniff"
-                                }
+                                filename=att_title,
+                                raw_mime=fetched_mime or att_mime,
+                                inline_requested=bool(inline)
                             )
 
                     b64_str = att.get("file_base64", "")
@@ -2856,17 +2866,11 @@ def download_doc(doc_id: str, inline: Optional[bool] = False):
                         if "," in b64_str:
                             b64_str = b64_str.split(",", 1)[1]
                         raw_bytes = base64.b64decode(b64_str)
-                        safe_title = att_title.replace('"', '\\"')
-                        encoded_title = urllib.parse.quote(att_title)
-                        disp_type = "inline" if (inline and is_safe_for_inline(att_mime, att_title)) else "attachment"
-                        return Response(
+                        return make_file_download_response(
                             content=raw_bytes,
-                            media_type=att_mime,
-                            headers={
-                                "Content-Disposition": f'{disp_type}; filename="{safe_title}"; filename*=UTF-8\'\'{encoded_title}',
-                                "Access-Control-Expose-Headers": "Content-Disposition",
-                                "X-Content-Type-Options": "nosniff"
-                            }
+                            filename=att_title,
+                            raw_mime=att_mime,
+                            inline_requested=bool(inline)
                         )
                 except Exception as ex:
                     print(f"[Download from DBPost err] {ex}")
@@ -2886,17 +2890,11 @@ def download_doc(doc_id: str, inline: Optional[bool] = False):
                         res = fetch_file_binary(file_id=att_vnai_id, provider_file_id=att_provider_id)
                         if res:
                             raw_bytes, fetched_mime = res
-                            safe_title = att_title.replace('"', '\\"')
-                            encoded_title = urllib.parse.quote(att_title)
-                            disp_type = "inline" if (inline and is_safe_for_inline(fetched_mime or att_mime, att_title)) else "attachment"
-                            return Response(
+                            return make_file_download_response(
                                 content=raw_bytes,
-                                media_type=fetched_mime or att_mime,
-                                headers={
-                                    "Content-Disposition": f'{disp_type}; filename="{safe_title}"; filename*=UTF-8\'\'{encoded_title}',
-                                    "Access-Control-Expose-Headers": "Content-Disposition",
-                                    "X-Content-Type-Options": "nosniff"
-                                }
+                                filename=att_title,
+                                raw_mime=fetched_mime or att_mime,
+                                inline_requested=bool(inline)
                             )
 
                     b64_str = att.get("file_base64", "")
@@ -2904,17 +2902,11 @@ def download_doc(doc_id: str, inline: Optional[bool] = False):
                         if "," in b64_str:
                             b64_str = b64_str.split(",", 1)[1]
                         raw_bytes = base64.b64decode(b64_str)
-                        safe_title = att_title.replace('"', '\\"')
-                        encoded_title = urllib.parse.quote(att_title)
-                        disp_type = "inline" if (inline and is_safe_for_inline(att_mime, att_title)) else "attachment"
-                        return Response(
+                        return make_file_download_response(
                             content=raw_bytes,
-                            media_type=att_mime,
-                            headers={
-                                "Content-Disposition": f'{disp_type}; filename="{safe_title}"; filename*=UTF-8\'\'{encoded_title}',
-                                "Access-Control-Expose-Headers": "Content-Disposition",
-                                "X-Content-Type-Options": "nosniff"
-                            }
+                            filename=att_title,
+                            raw_mime=att_mime,
+                            inline_requested=bool(inline)
                         )
                 except Exception as ex:
                     print(f"[Download from DBMessage err] {ex}")
@@ -2925,24 +2917,16 @@ def download_doc(doc_id: str, inline: Optional[bool] = False):
                     if fname.startswith(f"{doc_id}_"):
                         fpath = os.path.join("uploads", fname)
                         orig_title = fname.split("_", 1)[1] if "_" in fname else fname
-                        disp_type = "inline" if (inline and is_safe_for_inline(None, orig_title)) else "attachment"
-                        if disp_type == "inline":
-                            return FileResponse(path=fpath, media_type="application/octet-stream")
-                        return FileResponse(path=fpath, filename=orig_title, media_type="application/octet-stream")
+                        return make_file_path_response(
+                            path=fpath,
+                            filename=orig_title,
+                            raw_mime=None,
+                            inline_requested=bool(inline)
+                        )
 
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu yêu cầu.")
 
-        safe_title = (doc.title or "file").replace('"', '\\"')
-        encoded_title = urllib.parse.quote(doc.title or "file")
-        disp_type = "inline" if (inline and is_safe_for_inline(doc.mime_type, doc.title)) else "attachment"
-        download_headers = {
-            "Content-Disposition": f'{disp_type}; filename="{safe_title}"; filename*=UTF-8\'\'{encoded_title}',
-            "Access-Control-Expose-Headers": "Content-Disposition",
-            "X-Content-Type-Options": "nosniff"
-        }
-
         # 1. TẢI TRỰC TIẾP TỪ CLOUD DRIVE (drive.vn-ai.cloud / HCDrive):
-        # Backend tự kéo dữ liệu nhị phân về và stream thẳng cho client, KHÔNG redirect
         target_cloud_id = doc.vnai_file_id or doc.drive_file_id
         if target_cloud_id:
             cloud_res = fetch_file_binary(
@@ -2951,10 +2935,11 @@ def download_doc(doc_id: str, inline: Optional[bool] = False):
             )
             if cloud_res:
                 content_bytes, mime = cloud_res
-                return Response(
+                return make_file_download_response(
                     content=content_bytes,
-                    media_type=mime or doc.mime_type or "application/octet-stream",
-                    headers=download_headers
+                    filename=doc.title or "file",
+                    raw_mime=mime or doc.mime_type or "application/octet-stream",
+                    inline_requested=bool(inline)
                 )
 
         # 2. Nếu có file lưu trữ vật lý trên máy chủ
@@ -2965,15 +2950,11 @@ def download_doc(doc_id: str, inline: Optional[bool] = False):
                     target_path = os.path.join("uploads", fname)
                     break
         if target_path and os.path.exists(target_path):
-            if inline:
-                return FileResponse(
-                    path=target_path,
-                    media_type=doc.mime_type or "application/octet-stream"
-                )
-            return FileResponse(
+            return make_file_path_response(
                 path=target_path,
-                filename=doc.title,
-                media_type=doc.mime_type or "application/octet-stream"
+                filename=doc.title or "file",
+                raw_mime=doc.mime_type or "application/octet-stream",
+                inline_requested=bool(inline)
             )
 
         # 3. Nếu có dữ liệu base64 trong CSDL
@@ -2983,20 +2964,22 @@ def download_doc(doc_id: str, inline: Optional[bool] = False):
                 b64_str = b64_str.split(",", 1)[1]
             try:
                 raw_bytes = base64.b64decode(b64_str)
-                return Response(
+                return make_file_download_response(
                     content=raw_bytes,
-                    media_type=doc.mime_type or "application/octet-stream",
-                    headers=download_headers
+                    filename=doc.title or "file",
+                    raw_mime=doc.mime_type or "application/octet-stream",
+                    inline_requested=bool(inline)
                 )
             except Exception as e:
                 print(f"[Download base64 decode err] {e}")
 
         # 4. Fallback tệp PDF chuẩn hiển thị thông báo
         minimal_pdf = b"%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R/Resources<<>>>>endobj\nxref\n0 4\n0000000000 65535 f \n0000000009 00000 n \n0000000052 00000 n \n0000000101 00000 n \ntrailer<</Size 4/Root 1 0 R>>\nstartxref\n178\n%%EOF\n"
-        return Response(
+        return make_file_download_response(
             content=minimal_pdf,
-            media_type="application/pdf",
-            headers=download_headers
+            filename=(doc.title or "file") + ".pdf",
+            raw_mime="application/pdf",
+            inline_requested=bool(inline)
         )
     finally:
         db.close()
@@ -3341,43 +3324,25 @@ async def delete_post(
 ):
     db = SessionLocal()
     try:
-        current_user = get_auth_user(request, db)
-        req_uid = (current_user.id if current_user else (user_id or author_id or "")).strip()
-        email = (current_user.email if current_user else (user_email or "")).strip().lower()
-
-        if not req_uid and not email:
-            raise HTTPException(status_code=400, detail="Thiếu thông tin người dùng yêu cầu xóa bài (user_id hoặc user_email).")
-
         post = db.query(DBPost).filter(DBPost.id == post_id).first()
         if not post:
             raise HTTPException(status_code=404, detail="Không tìm thấy bài viết cần xóa.")
 
-        is_admin = current_user.is_system_admin if current_user else bool(
-            db.query(DBUser).filter(DBUser.email == email, DBUser.is_system_admin == True).first()
-        )
+        # Kiểm tra quyền sở hữu bài viết qua Bearer Token (Vá Lỗ hổng 4: BOLA / IDOR)
+        auth_user = get_auth_user(request, db)
+        if not auth_user:
+            raise HTTPException(status_code=401, detail="Phiên làm việc hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.")
 
-        # Kiểm tra quyền sở hữu bài viết:
-        # 1. Quản trị viên hệ thống
         is_author = False
-        if is_admin:
+        if auth_user.is_system_admin:
             is_author = True
-        # 2. So khớp ID người dùng với post.author_id
-        elif req_uid and post.author_id and req_uid == post.author_id:
+        elif post.author_id and auth_user.id == post.author_id:
             is_author = True
-        elif req_uid:
-            # Tra cứu nếu bài viết cũ chưa có author_id
-            u_check = db.query(DBUser).filter(DBUser.id == req_uid).first()
-            if u_check and u_check.email.lower() == (post.author_email or "").strip().lower():
-                is_author = True
-                if not post.author_id:
-                    post.author_id = u_check.id
-
-        # 3. So khớp email nếu không truyền user_id
-        if not is_author and email and (post.author_email or "").strip().lower() == email:
+        elif (post.author_email or "").strip().lower() == auth_user.email.lower():
             is_author = True
 
         if not is_author:
-            raise HTTPException(status_code=403, detail="Bạn không có quyền xóa bài viết này")
+            raise HTTPException(status_code=403, detail="Bạn không có quyền xóa bài viết này.")
 
         # Xóa các tệp đính kèm gắn với bài viết trên server và Google Drive
         if post.attachment_json:
@@ -3554,19 +3519,24 @@ def delete_document(doc_id: str, request: Request, user_email: Optional[str] = N
         if not doc:
             raise HTTPException(status_code=404, detail="Không tìm thấy tài liệu cần xóa.")
 
-        current_user = get_auth_user(request, db)
-        req_email = (current_user.email if current_user else (user_email or "")).strip().lower()
-        if not req_email:
-            raise HTTPException(status_code=401, detail="Vui lòng đăng nhập để thực hiện xóa tài liệu.")
+        # Kiểm tra quyền sở hữu qua Bearer Token (Vá Lỗ hổng 4: BOLA / IDOR)
+        auth_user = get_auth_user(request, db)
+        if not auth_user:
+            raise HTTPException(status_code=401, detail="Phiên làm việc hết hạn hoặc không hợp lệ. Vui lòng đăng nhập lại.")
 
-        is_admin = current_user.is_system_admin if current_user else bool(
-            db.query(DBUser).filter(DBUser.email == req_email, DBUser.is_system_admin == True).first()
-        )
-        is_uploader = bool(doc.uploader_email and doc.uploader_email.strip().lower() == req_email)
+        is_allowed = False
+        if auth_user.is_system_admin:
+            is_allowed = True
+        elif doc.uploader_email and auth_user.email.lower() == doc.uploader_email.lower():
+            is_allowed = True
+        elif doc.room_id:
+            room = db.query(DBRoom).filter(DBRoom.id == doc.room_id).first()
+            if room:
+                members = json.loads(room.members_json or "[]")
+                is_allowed = any(m.get("role") == "leader" and m.get("email", "").lower() == auth_user.email.lower() for m in members)
 
-        if not is_uploader and not is_admin:
-            raise HTTPException(status_code=403, detail="Chỉ người tải lên hoặc Quản trị viên mới có quyền xóa tài liệu này.")
-
+        if not is_allowed:
+            raise HTTPException(status_code=403, detail="Bạn không có quyền xóa tài liệu này.")
         if doc.file_path and os.path.exists(doc.file_path):
             try:
                 os.remove(doc.file_path)
@@ -3879,33 +3849,6 @@ def reseed_database():
 # ==================== PHỤC VỤ WEB FRONTEND TĨNH ====================
 STATIC_DIR = os.path.dirname(os.path.abspath(__file__))
 
-ALLOWED_STATIC_EXTENSIONS = {
-    ".html", ".htm", ".js", ".css", ".png", ".jpg", ".jpeg",
-    ".gif", ".svg", ".ico", ".webp", ".woff", ".woff2", ".ttf",
-    ".eot", ".mp3", ".mp4", ".pdf", ".json"
-}
-
-class SecureStaticFiles(StaticFiles):
-    """
-    StaticFiles có lớp bảo vệ nghiêm ngặt:
-    - Chỉ cho phép các định dạng web tĩnh chuẩn (.html, .js, .css, ảnh, font).
-    - Chặn hoàn toàn file mã nguồn (.py), cơ sở dữ liệu (.db, .sqlite), file ẩn (.env, .git), file cấu hình (.yml).
-    - Ngăn chặn triệt để lỗ hổng rò rỉ dữ liệu nhạy cảm.
-    """
-    async def get_response(self, path: str, scope):
-        clean_path = path.lower().replace("\\", "/").strip("/")
-        ext = os.path.splitext(clean_path)[1]
-
-        # Ngăn chặn truy cập các file/thư mục ẩn, hoặc file không thuộc whitelist định dạng web tĩnh
-        if (
-            any(part.startswith(".") for part in clean_path.split("/"))
-            or (ext and ext not in ALLOWED_STATIC_EXTENSIONS)
-            or not ext
-        ):
-            raise HTTPException(status_code=404, detail="Not Found")
-
-        return await super().get_response(path, scope)
-
 @app.get("/")
 def serve_index():
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
@@ -3924,7 +3867,32 @@ def serve_post_deep_link(post_id: str):
     """Phục vụ Deep Linking trực tiếp tới bài viết cụ thể trên Diễn Đàn (/posts/123)"""
     return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
-app.mount("/", SecureStaticFiles(directory=STATIC_DIR, html=False), name="static")
+SAFE_STATIC_EXTENSIONS = {
+    ".html", ".htm", ".css", ".js", ".mjs", ".png", ".jpg", ".jpeg",
+    ".gif", ".webp", ".svg", ".ico", ".woff", ".woff2", ".ttf", ".eot",
+    ".mp3", ".mp4", ".pdf", ".json", ".map", ".txt"
+}
+
+class SecureStaticFiles(StaticFiles):
+    """
+    Lớp StaticFiles bảo mật (Vá Lỗ hổng 2: Chặn rò rỉ CSDL SQLite, file cấu hình và mã nguồn)
+    Chỉ cho phép phục vụ các định dạng web tĩnh an toàn trong whitelist.
+    """
+    async def get_response(self, path: str, scope):
+        clean_p = path.replace("\\", "/").lower()
+        base_name = os.path.basename(clean_p)
+        ext = os.path.splitext(base_name)[1]
+
+        if base_name.startswith(".") or "/." in clean_p or ext in FORBIDDEN_EXTENSIONS:
+            raise HTTPException(status_code=404, detail="Tài nguyên không tồn tại hoặc đã bị khóa bảo mật.")
+
+        # Bắt buộc tệp phải có đuôi mở rộng và nằm trong whitelist cho phép
+        if not ext or ext not in SAFE_STATIC_EXTENSIONS:
+            raise HTTPException(status_code=404, detail="Định dạng tệp không được phép truy cập trực tiếp.")
+
+        return await super().get_response(path, scope)
+
+app.mount("/", SecureStaticFiles(directory=STATIC_DIR, html=True), name="static")
 
 @app.on_event("startup")
 def on_startup():

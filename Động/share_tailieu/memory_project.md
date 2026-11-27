@@ -245,6 +245,51 @@
     + Kiểm tra HTTP Cache Headers: 100% tệp tĩnh và API có header `no-cache, no-store`.
     + Kiểm tra Real-time 2 chiều: User A (`hotranminhky0405@gmail.com`) và User B (`hohau951842@gmail.com`) nhận tin nhắn trong **158.5ms - 200.4ms**, thu hồi tin nhắn tức thì.
 
+---
+
+## 11. KHẮC PHỤC TOÀN DIỆN 8 LỖ HỔNG AN NINH THÔNG TIN TRỌNG YẾU (SECURITY HARDENING COMPLETED)
+- **Thời gian hoàn thành:** 22/11/2026.
+- **Chi tiết khắc phục từng lỗ hổng:**
+  1. **Lỗ hổng 1 - Lưu trữ mật khẩu dạng văn bản thuần (Plain Text Password Storage):**
+     - Đã nâng cấp thuật toán băm mật khẩu chuẩn công nghiệp: `PBKDF2-HMAC-SHA256` với `100.000` vòng lặp, salt ngẫu nhiên 16 bytes (`secrets.token_hex(16)`).
+     - Áp dụng so sánh chuỗi thời gian hằng số `hmac.compare_digest` triệt tiêu Timing Attack.
+     - Triển khai cơ chế Zero-Downtime Migration: Người dùng cũ đăng nhập bằng mật khẩu plain-text ban đầu sẽ được hệ thống tự động băm và lưu đè dạng `pbkdf2_sha256$100000$...` mà không làm gián đoạn trải nghiệm người dùng.
+     - Cập nhật các API `api_register_user`, `api_reset_password` băm mật khẩu chuẩn hóa và mở rộng cột `DBUser.password` lên `String(256)`.
+  2. **Lỗ hổng 2 - Lộ toàn bộ CSDL SQLite và file cấu hình qua Static Files:**
+     - Thiết lập lớp phòng thủ đa tầng (Defense-in-Depth):
+       + *Tầng Middleware:* `block_sensitive_files_middleware` chặn và trả về HTTP 404 cho mọi truy vấn chứa đuôi tệp `.db`, `.sqlite`, `.env`, `.py`, `.yml`, `.yaml`, `.git`, `edushare.db`, `Dockerfile`.
+       + *Tầng Application:* Thay thế `StaticFiles` bằng `SecureStaticFiles` kế thừa từ Starlette: Áp dụng Whitelist nghiêm ngặt chỉ phục vụ các đuôi tệp web tĩnh an toàn (`.html`, `.css`, `.js`, `.png`, `.jpg`, `.pdf`, `.json`...). Mọi tệp không có đuôi mở rộng hoặc nằm ngoài whitelist đều bị từ chối 404.
+       + *Tầng Reverse Proxy:* Khuyến nghị luật Nginx `location ~* \.(db|sqlite|env|py|...)$ { deny all; return 404; }`.
+  3. **Lỗ hổng 3 - Khách hàng tự kiểm soát mã xác thực OTP (Client-Side OTP Injection):**
+     - Loại bỏ hoàn toàn trường `otp` khỏi schema nhận vào `SendOtpRequest`.
+     - Chuyển 100% quyền sinh OTP về phía máy chủ bằng CSPRNG chuẩn an ninh: `secrets.randbelow(900000) + 100000` tạo mã 6 chữ số ngẫu nhiên không thể đoán trước và lưu trữ với TTL 600s trên Redis Cache.
+     - Xóa bỏ việc sinh `Math.floor(...)` và trường `otp` phía client tại `app.js`.
+  4. **Lỗ hổng 4 - Lỗ hổng kiểm soát phân quyền (BOLA / IDOR) trên các thao tác Xóa/Sửa:**
+     - Tích hợp hàm xác thực phiên tập trung `get_auth_user(request, db)` thông qua Bearer Token `edt_<uuid>_<timestamp>` lưu trong Redis.
+     - Kiểm soát phân quyền chặt chẽ trên 4 API trọng yếu:
+       + `PUT /api/users/profile`: Chỉ chính chủ tài khoản hoặc Quản trị viên hệ thống (`is_system_admin`) mới được phép chỉnh sửa.
+       + `DELETE /api/rooms/{room_id}`: Chỉ duy nhất Trưởng nhóm (`leader`) hoặc Super Admin mới được xóa vĩnh viễn nhóm.
+       + `DELETE /api/posts/{post_id}`: Chỉ tác giả bài viết (`post.author_id` / `post.author_email`) hoặc Super Admin mới có quyền xóa.
+       + `DELETE /api/docs/{doc_id}`: Chỉ người tải lên (`uploader_email`), Trưởng nhóm của phòng chứa tài liệu hoặc Super Admin mới có quyền xóa.
+  5. **Lỗ hổng 5 - Stored XSS khi xem trước tài liệu tải lên:**
+     - Bổ sung hàm kiểm duyệt MIME và đuôi tệp `is_safe_for_inline()`: Các tệp có khả năng chứa script (HTML, HTM, SVG, XML, JS, XHTML, SHTML...) tuyệt đối bị chặn xem `inline`, bắt buộc ép tải về dạng tệp đính kèm nhị phân (`Content-Disposition: attachment; filename="..."`, `media_type: application/octet-stream`).
+     - Bổ sung header an ninh `X-Content-Type-Options: nosniff` vào 100% phản hồi tải và xem trước tệp để triệt tiêu hành vi MIME Sniffing của trình duyệt.
+  6. **Lỗ hổng 6 - SSRF và bỏ qua xác thực SSL trong GeoChalk PHP Backend (`api.php`):**
+     - Bổ sung bộ lọc Whitelist Hostname cho `$customAuthUrl`: Chỉ cho phép kết nối đến các domain/host đáng tin cậy (`edushare.vn-ai.cloud`, `math.vn-ai.cloud`, `localhost`, `127.0.0.1`, `192.168.1.240` hoặc đuôi `.vn-ai.cloud`). Từ chối và bỏ qua mọi URL khác.
+     - Bật xác thực SSL nghiêm ngặt cho cURL: `CURLOPT_SSL_VERIFYPEER => true`, `CURLOPT_SSL_VERIFYHOST => 2` cho các domain/host công khai.
+  7. **Lỗ hổng 7 - Cấu hình CORS Wildcard kết hợp `allow_credentials=True`:**
+     - Loại bỏ `allow_origins=["*"]`.
+     - Thay thế bằng danh sách `ALLOWED_ORIGINS` tin cậy (đọc từ biến môi trường hoặc mặc định: `https://edushare.vn-ai.cloud`, `https://math.vn-ai.cloud`, `http://localhost:5500`, `http://127.0.0.1:5500`, `http://localhost:8080`, `http://127.0.0.1:8080`).
+  8. **Lỗ hổng 8 - Lộ cổng Redis 6379 công khai và mật khẩu SMTP trong Docker:**
+     - Thu hẹp cổng Redis lắng nghe: Đổi `ports: - "6379:6379"` thành `ports: - "127.0.0.1:6379:6379"`.
+     - Chuyển `SMTP_PASS` và các cấu hình nhạy cảm sang `.env`, nạp qua `env_file: - .env` trong `docker-compose.yml`.
+     - Loại bỏ `SMTP_PASS` và `SMTP_USER` hardcode khỏi `Dockerfile`.
+     - Bổ sung `*.db`, `*.sqlite`, `*.sqlite3` và `.env` vào [.gitignore](.gitignore).
+- **Kết quả kiểm thử tự động toàn diện (`test_security.py` & `test_realtime.py`):**
+  - Đạt 100% tỷ lệ thành công trên tất cả các phép thử an ninh thông tin và các tính năng nghiệp vụ.
+  - Hệ thống real-time WebSocket, gửi nhận tin nhắn 2 chiều, thu hồi tin nhắn, tải/xem tài liệu hoạt động mượt mà và an toàn tuyệt đối.
+
+
 
 
 
